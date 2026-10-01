@@ -46,31 +46,23 @@ function App() {
     savePaneLayout(workspace.id, { tree, panes });
   }, [workspace, tree, panes]);
 
-  const openFile = useCallback(
-    (filePath: string) => {
-      setPanes((prev) => {
-        if (Object.values(prev).includes(filePath)) return prev;
-        const emptyEntry = Object.entries(prev).find(([, p]) => !p);
-        if (emptyEntry) {
-          return { ...prev, [emptyEntry[0]]: filePath };
-        }
-        if (tree === null) {
-          const id = `pane-open-${Date.now()}`;
-          setTree(id);
-          return { ...prev, [id]: filePath };
-        }
-        // no empty pane: replace the first pane's content
-        const firstId = Object.keys(prev)[0];
-        if (!firstId) {
-          const id = `pane-open-${Date.now()}`;
-          setTree(id);
-          return { ...prev, [id]: filePath };
-        }
-        return { ...prev, [firstId]: filePath };
-      });
-    },
-    [tree],
-  );
+  const openFile = (filePath: string) => {
+    if (Object.values(panes).includes(filePath)) return;
+    const emptyEntry = Object.entries(panes).find(([, p]) => !p);
+    if (emptyEntry) {
+      setPanes({ ...panes, [emptyEntry[0]]: filePath });
+      return;
+    }
+    if (!tree || Object.keys(panes).length === 0) {
+      const id = `pane-open-${Date.now()}`;
+      setTree(id);
+      setPanes({ ...panes, [id]: filePath });
+      return;
+    }
+    // no empty pane: replace the first pane's content
+    const firstId = Object.keys(panes)[0];
+    setPanes({ ...panes, [firstId]: filePath });
+  };
 
   const openFileInPane = useCallback((paneId: string, filePath: string) => {
     setPanes((prev) => ({ ...prev, [paneId]: filePath }));
