@@ -12,12 +12,11 @@
     "sql:allow-load",
     "sql:allow-execute",
     "sql:allow-select",
-    "fs:default",
-    "fs:allow-read-dir",
-    "fs:allow-read-text-file",
-    "fs:allow-write-text-file",
-    "fs:allow-mkdir",
-    "fs:allow-remove",
-    "fs:allow-rename"
+    { "identifier": "fs:allow-read-dir", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-read-text-file", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-write-text-file", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-mkdir", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-remove", "allow": [{ "path": "**" }] },
+    { "identifier": "fs:allow-rename", "allow": [{ "path": "**" }] }
   ]
 }
