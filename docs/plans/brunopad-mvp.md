@@ -14,6 +14,21 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 - [ ] 1. Scaffold Tauri 2.0 app (React/TS/Tailwind); commit toolchain pins
   Blocked by: -
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. Scaffold Vite + React + TypeScript app in repo root (package.json,
+          tsconfig, vite.config.ts, src/, index.html).
+       2. Add Tailwind CSS (v3 config or v4 build step) wired into src/ styles.
+       3. Add Tauri 2.0: @tauri-apps/cli dev-dep, `tauri init` -> src-tauri/
+          (Cargo.toml, tauri.conf.json, main.rs) with devUrl pointing at Vite.
+       4. Commit toolchain pins: package.json exact versions,
+          src-tauri/rust-toolchain.toml. Update .gitignore
+          (node_modules/, dist/, src-tauri/target/).
+       Files: package.json, package-lock.json, tsconfig.json,
+       vite.config.ts, index.html, src/*, src-tauri/*, .gitignore
+       Verify:
+       - npm run build (tsc + vite build) -> exit 0
+       - cargo check in src-tauri/ -> exit 0 (host run per ADR-0004) -->
 - [ ] 2. Configure core plugins: fs, dialog, sql (capabilities in tauri.conf.json)
   Blocked by: 1
 - [ ] 3. SQLite init + schema: user_workspaces (path), pane_layouts (JSON), files (metadata)
