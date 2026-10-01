@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Mosaic, MosaicWindow, MosaicNode } from "react-mosaic-component";
 import "react-mosaic-component/react-mosaic-component.css";
+import { MarkdownEditor } from "./MarkdownEditor";
 
 interface PaneAreaProps {
   tree: MosaicNode<string> | null;
@@ -51,8 +52,12 @@ export function PaneArea(props: PaneAreaProps) {
               if (filePath) props.onDropFile(id, filePath);
             }}
           >
-            <div className="flex-1 overflow-y-auto p-4 text-sm text-neutral-600">
-              {props.panes[id] ?? "Empty pane"}
+            <div className="flex-1 overflow-y-auto">
+              {props.panes[id] ? (
+                <MarkdownEditor key={props.panes[id]} filePath={props.panes[id]} />
+              ) : (
+                <div className="p-4 text-sm text-neutral-600">Empty pane</div>
+              )}
             </div>
             <div className="flex justify-end border-t border-neutral-200 p-1">
               <button
