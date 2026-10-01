@@ -152,6 +152,29 @@ Ordered; "Blocked by" lists task numbers that must finish first.
          ~1s -->
 - [ ] 7. Sidebar CRUD: create/rename/delete folders + .md files
   Blocked by: 6
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. src/lib/explorer.ts: add createFile (writeTextFile, ""),
+          createFolder (mkdir), renameEntry (rename within same dir),
+          deleteEntry (remove, recursive for dirs).
+       2. src/components/ContextMenu.tsx: lightweight fixed-position
+          menu (backdrop click-away); items: {label, danger?, onClick}.
+       3. Rewrite src/components/FileTree.tsx with LIFTED expansion
+          state (Set<path>) + children cache (Map<path>) so the tree
+          can refresh after CRUD without losing expansion; nodes get
+          onContextMenu -> menu; inline input row commits new
+          file/folder names on Enter (window.prompt is unavailable in
+          the Tauri webview); rename uses the same inline input
+          prefilled; delete goes straight through (remove).
+       4. Sidebar header: "+ file" button targeting the workspace root;
+          App bumps treeVersion on every mutation.
+       Files: src/lib/explorer.ts, src/components/ContextMenu.tsx,
+       src/components/FileTree.tsx, src/App.tsx
+       Verify:
+       - npm run build -> exit 0
+       - cargo check (PATH prefix) -> exit 0
+       - runtime smoke (user-run): right-click create file + folder,
+         rename both, delete both; verify on disk -->
 - [ ] 8. react-mosaic panes: drag file in, VS Code-style edge split, serialize layout to SQLite, restore on restart
   Blocked by: 7
 - [ ] 9. BlockNote in panes: .md -> blocks on load, blocks -> .md on save
