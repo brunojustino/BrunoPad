@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWorkspace, setWorkspace, type UserWorkspace } from "./lib/workspace";
+import { FileTree } from "./components/FileTree";
 
 function App() {
   const [workspace, setWorkspaceState] = useState<UserWorkspace | null>(null);
@@ -36,7 +37,12 @@ function App() {
         )}
       </header>
       {workspace ? (
-        <main className="flex-1" />
+        <div className="flex flex-1 overflow-hidden">
+          <aside className="w-60 shrink-0 overflow-y-auto border-r border-neutral-200 bg-neutral-50">
+            <FileTree rootPath={workspace.path} />
+          </aside>
+          <main className="flex-1" />
+        </div>
       ) : (
         <main className="flex flex-1 items-center justify-center">
           <button

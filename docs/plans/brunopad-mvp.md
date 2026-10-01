@@ -109,7 +109,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check (PATH prefix) -> exit 0
        - runtime smoke (user-run): pick a folder -> path appears; restart app
          -> same path shown without picking -->
-- [ ] 5. Explorer sidebar: recursive tree of user workspace
+- [x] 5. Explorer sidebar: recursive tree of user workspace
   Blocked by: 4
   <!-- mini-plan filled at execution time:
        Steps:
@@ -153,4 +153,5 @@ Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 - Task 3 (2026-10-01): deviation - `Migration` is not `Clone` in tauri-plugin-sql 2.5.0, so the migrations are built as a `Vec` inside `run()` instead of a const slice copy. Verify: `npm run build` green, `cargo check` green. Runtime smoke pending user run (`npm run tauri dev` -> devtools console shows tables).
 - Task 3 runtime-smoke failure (2026-10-01): user hit `SQLITE_BUSY (code 5)` on startup - React StrictMode double-invokes the mount effect in dev, overlapping two `Database.load` calls (both run migration checks against the same file). Fixed in `src/lib/db.ts`: memoize the load *promise* (dedupes concurrent callers) and enable WAL journal mode after load. Verify: `npm run build` green; user smoke re-run pending.
 - Task 3 runtime-smoke failure 2 (2026-10-01): `sql.execute not allowed` - `sql:default` in tauri-plugin-sql 2.5.0 does not include execute/select/load. Added explicit `sql:allow-load`, `sql:allow-execute`, `sql:allow-select` to capabilities/default.json. Verify: build green; user smoke re-run pending.
+- Task 5 (2026-10-01): deviation - plugin-fs 2.6.0 `DirEntry` has no `path` field (name only), so `readDirEntries` builds a project `ExplorerEntry` type with joined paths (separator inferred from input). Verify: build green, cargo check green. Runtime smoke pending user run.
 <!-- owt:end -->
