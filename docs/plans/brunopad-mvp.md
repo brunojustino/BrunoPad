@@ -88,7 +88,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check (PATH prefix) -> exit 0
        - runtime smoke (user-run): `npm run tauri dev` -> devtools console
          shows the three tables listed -->
-- [ ] 4. User-workspace folder picker UI; persist selected path
+- [x] 4. User-workspace folder picker UI; persist selected path
   Blocked by: 3
   <!-- mini-plan filled at execution time:
        Steps:
