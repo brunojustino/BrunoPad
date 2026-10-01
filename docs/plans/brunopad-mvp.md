@@ -54,6 +54,40 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check (PATH prefixed with ~\.cargo\bin, see plan Notes) -> exit 0 -->
 - [ ] 3. SQLite init + schema: user_workspaces (path), pane_layouts (JSON), files (metadata)
   Blocked by: 2
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. src-tauri/src/lib.rs: declare migration v1 (SQL below) via
+          tauri_plugin_sql::{Migration, MigrationKind} and attach with
+          .add_migrations("sqlite:brunopad.db", migrations) on the sql plugin.
+       2. Schema (migration v1):
+          CREATE TABLE user_workspaces (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+          );
+          CREATE TABLE pane_layouts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            workspace_id INTEGER NOT NULL REFERENCES user_workspaces(id) ON DELETE CASCADE,
+            layout TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+          );
+          CREATE TABLE files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            workspace_id INTEGER NOT NULL REFERENCES user_workspaces(id) ON DELETE CASCADE,
+            path TEXT NOT NULL,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE (workspace_id, path)
+          );
+       3. src/lib/db.ts: getDb() singleton via Database.load("sqlite:brunopad.db")
+          from @tauri-apps/plugin-sql; on startup log tables found
+          (sqlite_master) as dev-time smoke signal (console.debug).
+       4. src/App.tsx: call getDb() in a mount effect (fire-and-forget smoke check).
+       Files: src-tauri/src/lib.rs, src/lib/db.ts, src/App.tsx
+       Verify:
+       - npm run build -> exit 0
+       - cargo check (PATH prefix) -> exit 0
+       - runtime smoke (user-run): `npm run tauri dev` -> devtools console
+         shows the three tables listed -->
 - [ ] 4. User-workspace folder picker UI; persist selected path
   Blocked by: 3
 - [ ] 5. Explorer sidebar: recursive tree of user workspace
