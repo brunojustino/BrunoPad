@@ -181,6 +181,23 @@ Ordered; "Blocked by" lists task numbers that must finish first.
   Blocked by: 8
 - [ ] 10. Verify BlockNote native behaviors: block drag, slash menu, heading markers
   Blocked by: 9
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. Static sanity (agent): required CSS imported (inter.css,
+          mantine style.css, mosaic css); height chain into BlockNoteView
+          intact; fix minor CSS if the editor doesn't fill the pane.
+       2. Runtime checklist (user-run, in `npm run tauri dev`):
+          a. block drag: hover left of a paragraph -> grip appears ->
+             drag to reorder
+          b. slash menu: "/" -> menu opens, filters by text, inserts block
+          c. markdown shortcuts: "#"+space -> heading; "-"+space ->
+             bullet; "1."+space -> numbered; **bold** on selection via toolbar
+          d. content round-trip: heading+list+bold -> save -> file on disk
+             is raw markdown; re-open -> blocks identical
+       3. Fix any broken behavior found (stays within task scope).
+       Files: (only if fixes needed) src/components/MarkdownEditor.tsx,
+       src/styles.css
+       Verify: user checklist all green + npm run build + cargo check -->
 - [ ] 11. AI chat sidebar: chunk+embed files, embeddings in SQLite, external API; decide key storage first
   Blocked by: 5, 10
 - [ ] 12. Ghost-text autocomplete on typing pause
