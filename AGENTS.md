@@ -2,14 +2,19 @@
 
 Keep this file short. It is a router: detailed rules live in the files below and are loaded lazily, only when relevant to the current task.
 
+## Project
+
+brunopad - a local markdown-first desktop editor ("super-powered text editor"): Tauri 2.0 (Rust) + React/TypeScript/Tailwind, BlockNote editor core, react-mosaic-component panes, SQLite via @tauri-apps/plugin-sql, AI integration. The stack is fixed by docs/adr/0003-tech-stack-brunopad.md; alternatives (Electron, TipTap, custom pane code) are rejected there.
+
 ## Docs map (lazy loading - read only what the task needs)
 
+- Product brief & phases: docs/spec/product-brief.md
+- Active plan: docs/plans/brunopad-mvp.md
 - Planning / implementation workflow: @docs/rules/task-execution.md (load before planning or implementing tasks)
 - Git + docs-update conventions: @docs/rules/git-workflow.md (load before any commit)
 - Agent environment constraints (workspace-root wall, Docker execution): @docs/rules/agent-constraints.md (load before touching paths outside the workspace root or running/building/testing project code; Docker policy rationale in docs/adr/0002-docker-execution-policy.md)
 - Domain vocabulary: CONTEXT.md (glossary - consult before introducing new terms)
 - Decision records: docs/adr/index.md (check before reversing a recorded decision)
-- Active plans: docs/plans/
 
 ## Workflow (short version)
 
