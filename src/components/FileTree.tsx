@@ -12,7 +12,10 @@ import { ContextMenu, type MenuItem } from "./ContextMenu";
 
 interface FileTreeProps {
   rootPath: string;
+  onSelectFile: (path: string) => void;
 }
+
+const FILE_MIME = "application/x-brunopad-file";
 
 const FILE_NAME_PLACEHOLDER = "untitled.md";
 const FOLDER_NAME_PLACEHOLDER = "untitled";
@@ -22,7 +25,7 @@ type Draft =
   | { kind: "rename"; path: string; original: string }
   | null;
 
-export function FileTree({ rootPath }: FileTreeProps) {
+export function FileTree({ rootPath, onSelectFile }: FileTreeProps) {
   const [entries, setEntries] = useState<ExplorerEntry[] | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [cache, setCache] = useState<Map<string, ExplorerEntry[]>>(new Map());
@@ -130,7 +133,13 @@ export function FileTree({ rootPath }: FileTreeProps) {
         <button
           className="flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-sm hover:bg-neutral-100"
           style={{ paddingLeft: `${depth * 12 + 6}px` }}
-          onClick={() => void toggle(entry)}
+          onClick={() => (entry.isDirectory ? void toggle(entry) : onSelectFile(entry.path))}
+          draggable={!entry.isDirectory}
+          onDragStart={(e) => {
+            if (entry.isDirectory) return;
+            e.dataTransfer.setData(FILE_MIME, entry.path);
+            e.dataTransfer.effectAllowed = "copy";
+          }}
           onContextMenu={(e) => {
             e.preventDefault();
             setMenu({ x: e.clientX, y: e.clientY, entry });

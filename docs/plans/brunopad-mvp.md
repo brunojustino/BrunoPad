@@ -175,7 +175,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check (PATH prefix) -> exit 0
        - runtime smoke (user-run): right-click create file + folder,
          rename both, delete both; verify on disk -->
-- [ ] 8. react-mosaic panes: drag file in, VS Code-style edge split, serialize layout to SQLite, restore on restart
+- [x] 8. react-mosaic panes: drag file in, VS Code-style edge split, serialize layout to SQLite, restore on restart
   Blocked by: 7
 - [ ] 9. BlockNote in panes: .md -> blocks on load, blocks -> .md on save
   Blocked by: 8
@@ -198,4 +198,5 @@ Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 - Task 5 (2026-10-01): deviation - plugin-fs 2.6.0 `DirEntry` has no `path` field (name only), so `readDirEntries` builds a project `ExplorerEntry` type with joined paths (separator inferred from input). Verify: build green, cargo check green. Runtime smoke pending user run.
 - Task 5 runtime-smoke failure (2026-10-01): `forbidden path` on user-picked dirs - bare `fs:allow-*` permissions only cover app-reserved dirs; arbitrary user-workspace paths need explicit scopes. Fixed capabilities: each fs permission carries `allow: [{ "path": "**" }]`. Security trade-off (MVP: frontend fs API is unconstrained) noted; the principled fix - runtime-extend the fs scope in Rust when the picker resolves - is deferred; revisit before release.
 - Task 7 (2026-10-01): deviation - mini-plan's "+ file at root" header button replaced with a "change workspace" button (more useful now; root-level create needs an imperative FileTree API - deferred; create works by right-clicking any existing folder). FileTree rewritten with lifted expansion state, so CRUD refreshes no longer collapse folders (also softens the task-6 remount trade-off). Verify: build green, cargo check green. Runtime smoke pending user run.
+- Task 8 (2026-10-01): deviation - MosaicZeroState in v7 accepts only `createNode`, so a custom zero-state div is used. Editor placeholder renders file name; real content lands with task 9 (BlockNote). Persisted layout = `{ tree, panes }` JSON via DELETE+INSERT per save (debounced 300ms). Verify: build green, cargo check green. Runtime smoke pending user run (open 2 files split, restart, layout restored).
 <!-- owt:end -->

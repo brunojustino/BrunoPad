@@ -1,19 +1,34 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { MosaicNode } from "react-mosaic-component";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWorkspace, setWorkspace, type UserWorkspace } from "./lib/workspace";
 import { FileTree } from "./components/FileTree";
 import { watchWorkspace } from "./lib/watcher";
+import { loadPaneLayout, savePaneLayout } from "./lib/panes";
+import { PaneArea } from "./components/PaneArea";
 
 function App() {
   const [workspace, setWorkspaceState] = useState<UserWorkspace | null>(null);
   const [busy, setBusy] = useState(false);
   const [treeVersion, setTreeVersion] = useState(0);
+  const [tree, setTree] = useState<MosaicNode<string> | null>(null);
+  const [panes, setPanes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     void getCurrentWorkspace()
       .then(setWorkspaceState)
       .catch((err) => console.error("[workspace] load failed", err));
   }, []);
+
+  useEffect(() => {
+    if (!workspace) return;
+    void loadPaneLayout(workspace.id)
+      .then((layout) => {
+        setTree(layout.tree);
+        setPanes(layout.panes);
+      })
+      .catch((err) => console.error("[panes] load failed", err));
+  }, [workspace]);
 
   useEffect(() => {
     if (!workspace) return;
@@ -26,6 +41,45 @@ function App() {
     return () => unwatch?.();
   }, [workspace]);
 
+  useEffect(() => {
+    if (!workspace) return;
+    savePaneLayout(workspace.id, { tree, panes });
+  }, [workspace, tree, panes]);
+
+  const openFile = useCallback(
+    (filePath: string) => {
+      setPanes((prev) => {
+        const occupied = new Set(Object.values(prev));
+        if (occupied.has(filePath)) return prev;
+        const emptyEntry = Object.entries(prev).find(([, p]) => !p);
+        if (emptyEntry) {
+          return { ...prev, [emptyEntry[0]]: filePath };
+        }
+        if (tree === null) {
+          setTree(`pane-open-${Date.now()}`);
+          return { ...prev, [`pane-open-${Date.now()}`]: filePath };
+        }
+        // replace the first pane's content
+        const firstId = Object.keys(prev)[0];
+        if (!firstId) return prev;
+        return { ...prev, [firstId]: filePath };
+      });
+    },
+    [tree],
+  );
+
+  const openFileInPane = useCallback((paneId: string, filePath: string) => {
+    setPanes((prev) => ({ ...prev, [paneId]: filePath }));
+  }, []);
+
+  const closePane = useCallback((paneId: string) => {
+    setPanes((prev) => {
+      const next = { ...prev };
+      delete next[paneId];
+      return next;
+    });
+  }, []);
+
   const pickWorkspace = async () => {
     setBusy(true);
     try {
@@ -33,6 +87,8 @@ function App() {
       if (dir) {
         const saved = await setWorkspace(dir);
         setWorkspaceState(saved);
+        setTree(null);
+        setPanes({});
       }
     } catch (err) {
       console.error("[workspace] pick failed", err);
@@ -62,10 +118,22 @@ function App() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <FileTree key={treeVersion} rootPath={workspace.path} />
+              <FileTree
+                key={treeVersion}
+                rootPath={workspace.path}
+                onSelectFile={openFile}
+              />
             </div>
           </aside>
-          <main className="flex-1" />
+          <main className="flex-1 overflow-hidden">
+            <PaneArea
+              tree={tree}
+              panes={panes}
+              onTreeChange={setTree}
+              onDropFile={openFileInPane}
+              onClosePane={closePane}
+            />
+          </main>
         </div>
       ) : (
         <main className="flex flex-1 items-center justify-center">
