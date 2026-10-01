@@ -1,7 +1,7 @@
 <!-- owt:start -->
 # Plan: brunopad MVP
 
-Status: draft
+Status: approved
 Runtime: host-waived
 <!-- When the last task is ticked, set Status: done and move this file to
      docs/plans/history/ in the same commit (archived plans are read-only records). -->
