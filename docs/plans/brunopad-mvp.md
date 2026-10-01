@@ -150,7 +150,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - runtime smoke (user-run): with app open, create/rename/delete a
          file in the workspace from Explorer -> sidebar reflects it within
          ~1s -->
-- [ ] 7. Sidebar CRUD: create/rename/delete folders + .md files
+- [x] 7. Sidebar CRUD: create/rename/delete folders + .md files
   Blocked by: 6
   <!-- mini-plan filled at execution time:
        Steps:
@@ -197,4 +197,5 @@ Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 - Task 3 runtime-smoke failure 2 (2026-10-01): `sql.execute not allowed` - `sql:default` in tauri-plugin-sql 2.5.0 does not include execute/select/load. Added explicit `sql:allow-load`, `sql:allow-execute`, `sql:allow-select` to capabilities/default.json. Verify: build green; user smoke re-run pending.
 - Task 5 (2026-10-01): deviation - plugin-fs 2.6.0 `DirEntry` has no `path` field (name only), so `readDirEntries` builds a project `ExplorerEntry` type with joined paths (separator inferred from input). Verify: build green, cargo check green. Runtime smoke pending user run.
 - Task 5 runtime-smoke failure (2026-10-01): `forbidden path` on user-picked dirs - bare `fs:allow-*` permissions only cover app-reserved dirs; arbitrary user-workspace paths need explicit scopes. Fixed capabilities: each fs permission carries `allow: [{ "path": "**" }]`. Security trade-off (MVP: frontend fs API is unconstrained) noted; the principled fix - runtime-extend the fs scope in Rust when the picker resolves - is deferred; revisit before release.
+- Task 7 (2026-10-01): deviation - mini-plan's "+ file at root" header button replaced with a "change workspace" button (more useful now; root-level create needs an imperative FileTree API - deferred; create works by right-clicking any existing folder). FileTree rewritten with lifted expansion state, so CRUD refreshes no longer collapse folders (also softens the task-6 remount trade-off). Verify: build green, cargo check green. Runtime smoke pending user run.
 <!-- owt:end -->

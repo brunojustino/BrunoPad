@@ -51,8 +51,19 @@ function App() {
       </header>
       {workspace ? (
         <div className="flex flex-1 overflow-hidden">
-          <aside className="w-60 shrink-0 overflow-y-auto border-r border-neutral-200 bg-neutral-50">
-            <FileTree key={treeVersion} rootPath={workspace.path} />
+          <aside className="flex w-60 shrink-0 flex-col overflow-hidden border-r border-neutral-200 bg-neutral-50">
+            <div className="flex h-8 items-center border-b border-neutral-200 px-2">
+              <button
+                className="rounded px-1.5 py-0.5 text-xs text-neutral-500 hover:bg-neutral-200"
+                onClick={() => void pickWorkspace()}
+                title="Change workspace"
+              >
+                workspace
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <FileTree key={treeVersion} rootPath={workspace.path} />
+            </div>
           </aside>
           <main className="flex-1" />
         </div>
