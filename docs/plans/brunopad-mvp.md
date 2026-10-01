@@ -52,7 +52,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        Verify:
        - npm run build -> exit 0
        - cargo check (PATH prefixed with ~\.cargo\bin, see plan Notes) -> exit 0 -->
-- [ ] 3. SQLite init + schema: user_workspaces (path), pane_layouts (JSON), files (metadata)
+- [x] 3. SQLite init + schema: user_workspaces (path), pane_layouts (JSON), files (metadata)
   Blocked by: 2
   <!-- mini-plan filled at execution time:
        Steps:
@@ -113,4 +113,5 @@ Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 
 - Task 1 (2026-10-01): Tauri 2.12.1 (Tauri 3 still alpha; "Tauri 2.0" mandate = 2.x stable). `tauri init` named the crate `app` - renamed to `brunopad` (`brunopad_lib`), identifier `com.brunopad.app`. Added `src/vite-env.d.ts` for CSS module typing. Tailwind v4 via `@tailwindcss/vite`. Session PATH lacks `~\.cargo\bin` on this machine - verification commands must prefix it (`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`). Versions pinned exact: react/react-dom 19.3.0, vite 8.3.2, tailwindcss 4.3.3, typescript 7.0.2, @tauri-apps/{cli,api} 2.12.1. Verify: `npm run build` green, `cargo check` green (1m07s cold).
 - Task 2 (2026-10-01): Rust plugin crates locked exact to match npm: tauri-plugin-fs 2.6.0, tauri-plugin-dialog 2.8.1, tauri-plugin-sql 2.5.0 (sqlite feature). No deviations. Verify: `npm run build` green, `cargo check` green (50s).
+- Task 3 (2026-10-01): deviation - `Migration` is not `Clone` in tauri-plugin-sql 2.5.0, so the migrations are built as a `Vec` inside `run()` instead of a const slice copy. Verify: `npm run build` green, `cargo check` green. Runtime smoke pending user run (`npm run tauri dev` -> devtools console shows tables).
 <!-- owt:end -->
