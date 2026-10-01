@@ -1,3 +1,6 @@
+> SUPERSEDED: content moved to docs/spec/product-brief.md and
+> docs/plans/brunopad-mvp.md. Do not follow this file.
+
 Master Prompt for Local Agent
 
 System Role: You are an expert application engineer specializing in React, TypeScript, Rust, and modern cross-platform frameworks. We are building a "Super-Powered Text Editor"—a local markdown-first desktop application with advanced block-level editing, customizable tiling pane layouts, and AI capabilities.
