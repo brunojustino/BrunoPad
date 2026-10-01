@@ -129,7 +129,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check (PATH prefix) -> exit 0
        - runtime smoke (user-run): sidebar shows real folder tree;
          expanding nested folders works -->
-- [ ] 6. FS watcher (tauri plugin) -> UI updates on external changes
+- [x] 6. FS watcher (tauri plugin) -> UI updates on external changes
   Blocked by: 5
   <!-- mini-plan filled at execution time:
        Steps:
