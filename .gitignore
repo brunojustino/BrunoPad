@@ -1,0 +1,6 @@
+.opencode/tmp/
+.opencode/node_modules/
+.template-backup/
+.env
+Thumbs.db
+.DS_Store
