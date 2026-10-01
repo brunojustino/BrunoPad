@@ -1,4 +1,4 @@
-import type { MosaicNode } from "react-mosaic-component";
+import { getLeaves, type MosaicNode } from "react-mosaic-component";
 import { getDb } from "./db";
 
 export interface PaneLayout {
@@ -15,7 +15,19 @@ export async function loadPaneLayout(workspaceId: number): Promise<PaneLayout> {
   if (!rows[0]) return { tree: null, panes: {} };
   try {
     const parsed = JSON.parse(rows[0].layout) as PaneLayout;
-    return { tree: parsed.tree ?? null, panes: parsed.panes ?? {} };
+    const tree = parsed.tree ?? null;
+    let panes = parsed.panes ?? {};
+    if (tree) {
+      // drop orphan pane entries whose ids are not leaves of the tree
+      // (guards against corrupted layouts saved by older bugs)
+      const leaves = new Set<string>(getLeaves(tree));
+      panes = Object.fromEntries(
+        Object.entries(panes).filter(([id]) => leaves.has(id)),
+      );
+    } else {
+      panes = {};
+    }
+    return { tree, panes };
   } catch (err) {
     console.error("[panes] corrupt layout, resetting", err);
     return { tree: null, panes: {} };
