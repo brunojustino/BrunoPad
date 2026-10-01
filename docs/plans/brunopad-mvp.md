@@ -131,6 +131,25 @@ Ordered; "Blocked by" lists task numbers that must finish first.
          expanding nested folders works -->
 - [ ] 6. FS watcher (tauri plugin) -> UI updates on external changes
   Blocked by: 5
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. capabilities/default.json: add fs:allow-watch with
+          allow [{ "path": "**" }] scope.
+       2. src/lib/watcher.ts: watchWorkspace(path, onChange) using
+          plugin-fs watchImmediate(path, cb, { recursive: true }),
+          with a 200ms debounce on events; returns the unwatch fn.
+       3. src/App.tsx: on workspace set, start the watcher (cleanup
+          on change/unmount); on event bump treeVersion; FileTree
+          remounts via key={treeVersion} (expansion state resets -
+          accepted MVP trade-off, noted).
+       Files: src-tauri/capabilities/default.json, src/lib/watcher.ts,
+       src/App.tsx
+       Verify:
+       - npm run build -> exit 0
+       - cargo check (PATH prefix) -> exit 0
+       - runtime smoke (user-run): with app open, create/rename/delete a
+         file in the workspace from Explorer -> sidebar reflects it within
+         ~1s -->
 - [ ] 7. Sidebar CRUD: create/rename/delete folders + .md files
   Blocked by: 6
 - [ ] 8. react-mosaic panes: drag file in, VS Code-style edge split, serialize layout to SQLite, restore on restart
