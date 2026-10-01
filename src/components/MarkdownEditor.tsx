@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useCreateBlockNote, useEditorChange } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { markSelfWrite } from "../lib/watcher";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
@@ -45,6 +46,7 @@ export function MarkdownEditor({ filePath }: MarkdownEditorProps) {
       try {
         const md = await editor.blocksToMarkdownLossy(editor.document);
         await writeTextFile(filePath, md);
+        markSelfWrite();
       } catch (err) {
         console.error("[editor] save failed", filePath, err);
       } finally {

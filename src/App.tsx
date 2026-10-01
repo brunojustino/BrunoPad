@@ -49,19 +49,23 @@ function App() {
   const openFile = useCallback(
     (filePath: string) => {
       setPanes((prev) => {
-        const occupied = new Set(Object.values(prev));
-        if (occupied.has(filePath)) return prev;
+        if (Object.values(prev).includes(filePath)) return prev;
         const emptyEntry = Object.entries(prev).find(([, p]) => !p);
         if (emptyEntry) {
           return { ...prev, [emptyEntry[0]]: filePath };
         }
         if (tree === null) {
-          setTree(`pane-open-${Date.now()}`);
-          return { ...prev, [`pane-open-${Date.now()}`]: filePath };
+          const id = `pane-open-${Date.now()}`;
+          setTree(id);
+          return { ...prev, [id]: filePath };
         }
-        // replace the first pane's content
+        // no empty pane: replace the first pane's content
         const firstId = Object.keys(prev)[0];
-        if (!firstId) return prev;
+        if (!firstId) {
+          const id = `pane-open-${Date.now()}`;
+          setTree(id);
+          return { ...prev, [id]: filePath };
+        }
         return { ...prev, [firstId]: filePath };
       });
     },
@@ -73,11 +77,9 @@ function App() {
   }, []);
 
   const closePane = useCallback((paneId: string) => {
-    setPanes((prev) => {
-      const next = { ...prev };
-      delete next[paneId];
-      return next;
-    });
+    // keep the pane (emptied) so the mosaic tree stays consistent and
+    // openFile can always reuse it
+    setPanes((prev) => ({ ...prev, [paneId]: "" }));
   }, []);
 
   const pickWorkspace = async () => {

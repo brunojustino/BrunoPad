@@ -14,7 +14,8 @@ interface PaneAreaProps {
 const FILE_MIME = "application/x-brunopad-file";
 
 function paneName(id: string, panes: Record<string, string>): string {
-  return panes[id] ? nameFromPath(panes[id]) : id;
+  const filePath = panes[id];
+  return filePath ? nameFromPath(filePath) : id;
 }
 
 function nameFromPath(path: string): string {
