@@ -3,7 +3,6 @@
 
 Status: approved
 Runtime: host-waived
-<!-- Paused: tasks 10-12 deferred until docs/plans/brunopad-agent-e2e.md completes (priority). -->
 <!-- When the last task is ticked, set Status: done and move this file to
      docs/plans/history/ in the same commit (archived plans are read-only records). -->
 Origin: starter.md / docs/spec/product-brief.md, adaptation session 2026-10-01

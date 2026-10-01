@@ -28,27 +28,24 @@ pub fn run() {
     kind: MigrationKind::Up,
   }];
 
-  let mut builder = tauri::Builder::default()
+  tauri::Builder::default()
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_dialog::init())
     .plugin(
       tauri_plugin_sql::Builder::default()
         .add_migrations("sqlite:brunopad.db", migrations)
         .build(),
-    );
-
-  #[cfg(debug_assertions)]
-  {
-    builder = builder
-      .plugin(
-        tauri_plugin_log::Builder::default()
-          .level(log::LevelFilter::Info)
-          .build(),
-      )
-      .plugin(tauri_plugin_wdio::init());
-  }
-
-  builder
+    )
+    .setup(|app| {
+      if cfg!(debug_assertions) {
+        app.handle().plugin(
+          tauri_plugin_log::Builder::default()
+            .level(log::LevelFilter::Info)
+            .build(),
+        )?;
+      }
+      Ok(())
+    })
     .run(tauri::generate_context!())
     .expect("error while building tauri application");
 }

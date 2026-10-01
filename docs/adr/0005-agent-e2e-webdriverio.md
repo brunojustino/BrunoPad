@@ -26,7 +26,19 @@ automated away by the service (`autoInstallTauriDriver: true` plus
 automatic msedgedriver download matched to the evergreen WebView2
 runtime), so the original objection no longer holds.
 
-Status: accepted
+Status: reversed (2026-10-01)
+
+## Reversal (2026-10-01)
+
+The harness was removed the same day it was adopted. Agent-driven e2e
+runs kept wedging agent sessions, and debugging surfaced structural
+problems: app code invokes through `__TAURI_INTERNALS__` (ESM), which
+the plugin's interception does not cover, so unmocked native dialogs
+block tests indefinitely; and each run leaked a tauri-driver/
+msedgedriver process pair, accumulating across runs. A wall-clock
+wrapper bounded the runs but did not make the harness productive.
+Decision: remove the harness entirely; verification returns to
+user-run runtime smokes (MVP plan tasks 10-12 resume).
 
 ## Consequences
 

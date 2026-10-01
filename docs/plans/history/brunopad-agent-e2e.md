@@ -1,8 +1,15 @@
 <!-- owt:start -->
 # Plan: Agent E2E harness (priority)
 
-Status: approved
+Status: abandoned
 Runtime: host-waived
+<!-- Abandoned 2026-10-01, same day as adoption. Task 1 delivered the
+     harness (later removed wholesale); tasks 2-4 were not completed; a
+     wall-clock wrapper addition was also abandoned mid-flight. Causes:
+     repeated agent-session hangs around e2e runs and an unresolved
+     mocking gap (app ESM invokes bypass the plugin's interception, so
+     unmocked native dialogs block tests). Verification returns to
+     user-run runtime smokes. See ADR-0005 reversal note. -->
 <!-- When the last task is ticked, set Status: done and move this file to
      docs/plans/history/ in the same commit (archived plans are read-only records). -->
 Origin: conversation with user 2026-10-01; ADR-0005
