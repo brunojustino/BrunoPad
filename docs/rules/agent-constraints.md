@@ -32,6 +32,10 @@ When a project legitimately needs routine access to an outside path, the user ad
 
 Keep the allowlist short and specific. `~` expands to the user's home directory. Agents never edit this allowlist themselves - propose the entry, let the user add it.
 
+## Agent wall vs. app runtime access
+
+The workspace-root wall is about the *agent's* file tools: agents never path-touch anything outside the repo. The *app* reading the user's chosen user workspace is a product feature enabled through Tauri plugin capabilities in tauri.conf.json - that is code being written, not an agent permission. Never grant agent tools access to a user folder to "test" it; write unit/integration tests with fixture directories inside the repo instead.
+
 ## Docker Execution
 
 Projects must be self-sufficient: anything that would require installing a runtime on the user's machine (node, uv, java, ...) runs in Docker instead.

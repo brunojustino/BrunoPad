@@ -14,7 +14,7 @@ Load before any commit.
 
 1. Verification is green (no skipped tests).
 2. Plan task ticked, mini-plan deviations noted.
-3. No secrets, `.env`, or build artifacts staged. Check `git status` before `git add` - stage only intended files.
+3. No secrets, `.env`, or build artifacts staged (`node_modules/`, `src-tauri/target/`, `dist/`). Check `git status` before `git add` - stage only intended files.
 
 ## Push
 
