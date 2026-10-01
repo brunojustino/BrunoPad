@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ExplorerEntry } from "../lib/explorer";
 import {
   createFile,
@@ -187,6 +187,12 @@ function DraftRow({
 }) {
   const [value, setValue] = useState(defaultValue);
   const settled = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
 
   const settle = (commit: boolean) => {
     if (settled.current) return;
@@ -196,10 +202,7 @@ function DraftRow({
 
   return (
     <input
-      ref={(el) => {
-        el?.focus();
-        el?.select();
-      }}
+      ref={inputRef}
       className="mx-1 my-0.5 rounded border border-blue-400 px-1.5 py-0.5 text-sm outline-none"
       style={{ marginLeft: `${depth * 12 + 6}px`, width: "calc(100% - 18px)" }}
       value={value}
