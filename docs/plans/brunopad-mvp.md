@@ -90,6 +90,25 @@ Ordered; "Blocked by" lists task numbers that must finish first.
          shows the three tables listed -->
 - [ ] 4. User-workspace folder picker UI; persist selected path
   Blocked by: 3
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. src/lib/workspace.ts: UserWorkspace type + getCurrentWorkspace()
+          (SELECT ... ORDER BY id DESC LIMIT 1) + setWorkspace(path)
+          (INSERT OR IGNORE into user_workspaces).
+       2. src/App.tsx: on mount load current user workspace; if none, show
+          an "Open workspace" button -> @tauri-apps/plugin-dialog
+          open({ directory: true, multiple: false }); on pick, persist via
+          setWorkspace and render the selected path in a slim top bar.
+          If one exists already, render the path directly (placeholder main
+          area until Phase 2 explorer).
+       3. Cosmetic (kills the favicon 404): public/favicon.svg + link in index.html.
+       Files: src/lib/workspace.ts, src/App.tsx, src/styles.css (touch-up),
+       public/favicon.svg, index.html
+       Verify:
+       - npm run build -> exit 0
+       - cargo check (PATH prefix) -> exit 0
+       - runtime smoke (user-run): pick a folder -> path appears; restart app
+         -> same path shown without picking -->
 - [ ] 5. Explorer sidebar: recursive tree of user workspace
   Blocked by: 4
 - [ ] 6. FS watcher (tauri plugin) -> UI updates on external changes
