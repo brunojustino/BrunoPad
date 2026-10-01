@@ -11,7 +11,7 @@ export function getDb(): Promise<Database> {
         const tables = await db.select<{ name: string }[]>(
           "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
         );
-        console.debug(
+        console.log(
           "[db] tables:",
           tables.map((t) => t.name).join(", "),
         );
