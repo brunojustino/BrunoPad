@@ -31,6 +31,27 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check in src-tauri/ -> exit 0 (host run per ADR-0004) -->
 - [ ] 2. Configure core plugins: fs, dialog, sql (capabilities in tauri.conf.json)
   Blocked by: 1
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. npm deps (pinned): @tauri-apps/plugin-fs@2.6.0,
+          @tauri-apps/plugin-dialog@2.8.1, @tauri-apps/plugin-sql@2.5.0.
+       2. Rust deps in src-tauri/Cargo.toml: tauri-plugin-fs = "2",
+          tauri-plugin-dialog = "2", tauri-plugin-sql = { version = "2",
+          features = ["sqlite"] } (lock to the resolved 2.x exact after install).
+       3. Register in src-tauri/src/lib.rs:
+          .plugin(tauri_plugin_fs::init()),
+          .plugin(tauri_plugin_dialog::init()),
+          .plugin(tauri_plugin_sql::Builder::default().build()).
+       4. Extend src-tauri/capabilities/default.json permissions:
+          fs:default, fs:allow-read-dir, fs:allow-read-text-file,
+          fs:allow-write-text-file, fs:allow-mkdir, fs:allow-remove,
+          fs:allow-rename (+ dialog:default, sql:default).
+       Files: package.json, package-lock.json, src-tauri/Cargo.toml,
+       src-tauri/Cargo.lock, src-tauri/src/lib.rs,
+       src-tauri/capabilities/default.json
+       Verify:
+       - npm run build -> exit 0
+       - cargo check (PATH prefixed with ~\.cargo\bin, see plan Notes) -> exit 0 -->
 - [ ] 3. SQLite init + schema: user_workspaces (path), pane_layouts (JSON), files (metadata)
   Blocked by: 2
 - [ ] 4. User-workspace folder picker UI; persist selected path
