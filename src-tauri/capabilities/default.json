@@ -18,6 +18,12 @@
     { "identifier": "fs:allow-mkdir", "allow": [{ "path": "**" }] },
     { "identifier": "fs:allow-remove", "allow": [{ "path": "**" }] },
     { "identifier": "fs:allow-rename", "allow": [{ "path": "**" }] },
-    { "identifier": "fs:allow-watch", "allow": [{ "path": "**" }] }
+    { "identifier": "fs:allow-watch", "allow": [{ "path": "**" }] },
+    "wdio:allow-execute",
+    "wdio:allow-log-frontend",
+    "wdio:allow-debug-plugin",
+    "wdio:allow-get-active-window-label",
+    "wdio:allow-get-window-states",
+    "wdio:allow-list-windows"
   ]
 }

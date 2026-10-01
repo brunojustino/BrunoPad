@@ -6,26 +6,37 @@ task carries a "runtime smoke (user-run)" that stays pending, and UI bugs
 surfaced only at the Tauri layer. Agents need a runnable way to exercise
 the real app binary. We adopt E2E testing through WebdriverIO with the
 official `@wdio/tauri-service`, driving the debug build of the real app
-(embedded WebDriver provider), running on the host per ADR-0004.
+on the host per ADR-0004.
 
 Playwright is rejected: it supports Electron via its bundled Chromium,
 but Tauri renders in the OS webview (WebView2 on Windows), which is not
 a Playwright target. The community workaround (launch with
 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port`, attach
 Playwright over CDP) works only intermittently, is unmaintained, and
-gives no IPC mocking or log capture. `tauri-driver` driven manually is
-rejected on Windows because it requires msedgedriver to track the
-WebView2 runtime version; the service's embedded provider (via
-`tauri-plugin-wdio-webdriver`) removes that dependency entirely.
+gives no IPC mocking or log capture.
+
+Driver provider: `external` (`tauri-driver`), not the `embedded`
+provider. The embedded `tauri-plugin-wdio-webdriver` was the first
+choice (no external driver at all), but it is structurally broken with
+our pinned stack: the crate (1.4.0, including its upstream main) pins
+webview2-com 0.38 / windows 0.61, while tauri 2.12.1 re-exports
+webview2-com 0.39 (windows 0.62) - a type clash that fails to compile.
+Reconsidering tauri-driver: its manual msedgedriver version dance is
+automated away by the service (`autoInstallTauriDriver: true` plus
+automatic msedgedriver download matched to the evergreen WebView2
+runtime), so the original objection no longer holds.
 
 Status: accepted
 
 ## Consequences
 
-- Two optional Rust plugins (`tauri-plugin-wdio-webdriver`,
-  `tauri-plugin-wdio`) are wired into the app in debug builds for
-  `browser.tauri.execute()`, IPC mocking, and log capture; they are not
+- `tauri-plugin-wdio` is wired into the app in debug builds for
+  `browser.tauri.execute()`, IPC mocking, and log capture; it is not
   linked into release builds.
+- Registration order matters: `tauri-plugin-log` must be registered
+  before `tauri-plugin-wdio` (the log plugin must claim the global
+  logger first; wdio's own guard then skips its logger cooperatively).
+  Both live in a debug-only block.
 - Native dialogs (plugin-dialog) are invisible to WebDriver: tests mock
   the IPC layer instead of automating the picker; anything native gets
   a user-run smoke, unchanged.
