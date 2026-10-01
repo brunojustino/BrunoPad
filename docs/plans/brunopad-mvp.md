@@ -29,7 +29,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        Verify:
        - npm run build (tsc + vite build) -> exit 0
        - cargo check in src-tauri/ -> exit 0 (host run per ADR-0004) -->
-- [ ] 2. Configure core plugins: fs, dialog, sql (capabilities in tauri.conf.json)
+- [x] 2. Configure core plugins: fs, dialog, sql (capabilities in tauri.conf.json)
   Blocked by: 1
   <!-- mini-plan filled at execution time:
        Steps:
@@ -78,4 +78,5 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 
 - Task 1 (2026-10-01): Tauri 2.12.1 (Tauri 3 still alpha; "Tauri 2.0" mandate = 2.x stable). `tauri init` named the crate `app` - renamed to `brunopad` (`brunopad_lib`), identifier `com.brunopad.app`. Added `src/vite-env.d.ts` for CSS module typing. Tailwind v4 via `@tailwindcss/vite`. Session PATH lacks `~\.cargo\bin` on this machine - verification commands must prefix it (`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`). Versions pinned exact: react/react-dom 19.3.0, vite 8.3.2, tailwindcss 4.3.3, typescript 7.0.2, @tauri-apps/{cli,api} 2.12.1. Verify: `npm run build` green, `cargo check` green (1m07s cold).
+- Task 2 (2026-10-01): Rust plugin crates locked exact to match npm: tauri-plugin-fs 2.6.0, tauri-plugin-dialog 2.8.1, tauri-plugin-sql 2.5.0 (sqlite feature). No deviations. Verify: `npm run build` green, `cargo check` green (50s).
 <!-- owt:end -->
