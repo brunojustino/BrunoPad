@@ -36,16 +36,6 @@ pub fn run() {
         .add_migrations("sqlite:brunopad.db", migrations)
         .build(),
     )
-    .setup(|app| {
-      if cfg!(debug_assertions) {
-        app.handle().plugin(
-          tauri_plugin_log::Builder::default()
-            .level(log::LevelFilter::Info)
-            .build(),
-        )?;
-      }
-      Ok(())
-    })
     .run(tauri::generate_context!())
     .expect("error while building tauri application");
 }
