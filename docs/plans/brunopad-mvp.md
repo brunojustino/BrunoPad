@@ -111,6 +111,24 @@ Ordered; "Blocked by" lists task numbers that must finish first.
          -> same path shown without picking -->
 - [ ] 5. Explorer sidebar: recursive tree of user workspace
   Blocked by: 4
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. src/lib/explorer.ts: readDirEntries(path) wrapper over
+          @tauri-apps/plugin-fs readDir, returning entries sorted
+          (directories first, then alphabetical).
+       2. src/components/FileTree.tsx: lazy recursive tree component -
+          folders expand/collapse on click, children fetched per
+          directory on first expand and cached in component state;
+          files render as plain rows (no selection behavior yet).
+       3. src/App.tsx: left sidebar (w-60, border-r) hosting FileTree
+          rooted at workspace.path; main area stays placeholder.
+       Files: src/lib/explorer.ts, src/components/FileTree.tsx,
+       src/App.tsx
+       Verify:
+       - npm run build -> exit 0
+       - cargo check (PATH prefix) -> exit 0
+       - runtime smoke (user-run): sidebar shows real folder tree;
+         expanding nested folders works -->
 - [ ] 6. FS watcher (tauri plugin) -> UI updates on external changes
   Blocked by: 5
 - [ ] 7. Sidebar CRUD: create/rename/delete folders + .md files
