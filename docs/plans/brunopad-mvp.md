@@ -12,7 +12,7 @@ Spec: docs/spec/product-brief.md
 
 Ordered; "Blocked by" lists task numbers that must finish first.
 
-- [ ] 1. Scaffold Tauri 2.0 app (React/TS/Tailwind); commit toolchain pins
+- [x] 1. Scaffold Tauri 2.0 app (React/TS/Tailwind); commit toolchain pins
   Blocked by: -
   <!-- mini-plan filled at execution time:
        Steps:
@@ -55,4 +55,6 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 ## Notes
 
 Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
+
+- Task 1 (2026-10-01): Tauri 2.12.1 (Tauri 3 still alpha; "Tauri 2.0" mandate = 2.x stable). `tauri init` named the crate `app` - renamed to `brunopad` (`brunopad_lib`), identifier `com.brunopad.app`. Added `src/vite-env.d.ts` for CSS module typing. Tailwind v4 via `@tailwindcss/vite`. Session PATH lacks `~\.cargo\bin` on this machine - verification commands must prefix it (`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`). Versions pinned exact: react/react-dom 19.3.0, vite 8.3.2, tailwindcss 4.3.3, typescript 7.0.2, @tauri-apps/{cli,api} 2.12.1. Verify: `npm run build` green, `cargo check` green (1m07s cold).
 <!-- owt:end -->
