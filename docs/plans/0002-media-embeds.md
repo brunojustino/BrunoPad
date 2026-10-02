@@ -115,9 +115,42 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        (serializes <img src width>), pdf frame (embed markup + dims),
        doc chip (opens in system viewer). Draft plan: HTML-in-markdown
        serialization, refs relative to md file (ADR 0007). -->
-- [ ] 3. Copy-on-insert with destinations and collision renaming
+- [x] 3. Copy-on-insert with destinations and collision renaming
   Blocked by: 2
-  <!-- Steps: copy picked file to destination (same folder /
+  <!-- mini-plan (2026-10-02):
+       Steps:
+       1. New src/lib/editor/mediaInsert.ts:
+          - type MediaDestination = "sameFolder" | "subfolder" | "workspace"
+          - copyIntoWorkspaceDestination(sourcePath, mdFilePath,
+            destination) -> { absolutePath, relativeUrl }:
+            a. resolve target dir: sameFolder = parent of md file;
+               subfolder = {md dir}/assets (mkdir recursive);
+               workspace = {workspace root}/assets via getCurrentWorkspace,
+               falling back to {md dir}/assets when there is no workspace
+               or the md file sits outside it (loose-file fallback).
+            b. collision rename: if target name exists in that dir,
+               use name-1.ext, name-2.ext ... (never overwrite).
+            c. copyFile(sourcePath, target) via @tauri-apps/plugin-fs;
+               if sourcePath already resolves to the target, skip the copy.
+            d. relativeUrl = path relative from md dir to target
+               (segment-based, Windows-aware; lives in mediaInsert.ts).
+            e. register in files registry: ensureFileId(workspace.id,
+               absolutePath) only when the target is inside the workspace.
+       2. No UI wiring yet - task 4 (slash menu + dialog) is the first
+          caller; paste (task 5) and drop (task 6) follow.
+       Files/symbols: new src/lib/editor/mediaInsert.ts
+       Verify: npx tsc --noEmit; npm run build; manual dev run (console):
+       copyIntoWorkspaceDestination with a file outside the workspace into
+       a doc in a subfolder for each destination - expect file copied,
+       relative url correct (../../assets style), second run gets -1
+       suffix, nothing overwritten. -->
+  <!-- executed 2026-10-02: implemented as mini-planned (mediaInsert.ts:
+       destination resolution with loose-file fallback, uniqueTarget via
+       readDir-probe, relativePath util, conditional registry insert).
+       Deviation: none in scope. Typecheck and build green; manual
+       console-run checks pending user dev run. -->
+  <!-- original scope note (superseded by mini-plan above):
+       Steps: copy picked file to destination (same folder /
        {md dir}/assets/ / {workspace}/assets/); auto-rename name-1.ext on
        collision; register the new asset in the files table (plan 0001).
        Files/symbols: new src/lib/editor/mediaInsert.ts
