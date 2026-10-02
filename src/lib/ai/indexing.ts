@@ -1,9 +1,11 @@
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { readDirEntries } from "../explorer";
+import { ensureFileId } from "../fileRegistry";
 import { getApiKey, getProviderConfig, type AiProviderConfig } from "./settings";
 import { chunkMarkdown } from "./chunking";
 import { embedTexts } from "./embeddingClient";
 import { replaceEmbeddings } from "./embeddingStore";
+import { getDb } from "../db";
 
 const EMBED_BATCH = 16;
 
@@ -15,8 +17,9 @@ export async function embedFile(
   const cfg = config ?? (await getProviderConfig());
   const md = await readTextFile(path);
   const chunks = chunkMarkdown(md);
+  const fileId = await ensureFileId(workspaceId, path);
   if (chunks.length === 0) {
-    await replaceEmbeddings(workspaceId, path, [], cfg.embeddingModel);
+    await replaceEmbeddings(workspaceId, fileId, path, [], cfg.embeddingModel);
     return;
   }
   const vectors: number[][] = [];
@@ -29,7 +32,7 @@ export async function embedFile(
     text: chunk.text,
     embedding: vectors[i],
   }));
-  await replaceEmbeddings(workspaceId, path, inserts, cfg.embeddingModel);
+  await replaceEmbeddings(workspaceId, fileId, path, inserts, cfg.embeddingModel);
 }
 
 export async function indexWorkspace(
@@ -48,6 +51,9 @@ export async function indexWorkspace(
     }
   };
   await walk(rootPath);
+
+  const db = await getDb();
+  await db.execute("DELETE FROM embeddings WHERE workspace_id = $1", [workspaceId]);
 
   const cfg = await getProviderConfig();
   if (cfg.provider === "openrouter" && !getApiKey(cfg.provider)) {

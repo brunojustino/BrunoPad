@@ -53,6 +53,19 @@ pub fn run() {
     );
   ",
     kind: MigrationKind::Up,
+  }, Migration {
+    version: 4,
+    description: "embeddings_file_id",
+    sql: "
+    ALTER TABLE embeddings ADD COLUMN file_id INTEGER REFERENCES files(id);
+    UPDATE embeddings SET file_id = (
+      SELECT f.id FROM files f
+      WHERE f.workspace_id = embeddings.workspace_id AND f.path = embeddings.path
+    ) WHERE file_id IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_embeddings_ws_file_chunk
+      ON embeddings (workspace_id, file_id, chunk_index);
+  ",
+    kind: MigrationKind::Up,
   }];
 
   tauri::Builder::default()

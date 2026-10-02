@@ -26,19 +26,20 @@ export async function selectEmbeddings(
 
 export async function replaceEmbeddings(
   workspaceId: number,
+  fileId: number,
   path: string,
   inserts: EmbeddingInsert[],
   model: string,
 ): Promise<void> {
   const db = await getDb();
-  await db.execute("DELETE FROM embeddings WHERE workspace_id = $1 AND path = $2", [
-    workspaceId,
-    path,
-  ]);
+  await db.execute(
+    "DELETE FROM embeddings WHERE workspace_id = $1 AND (path = $2 OR file_id = $3)",
+    [workspaceId, path, fileId],
+  );
   for (const insert of inserts) {
     await db.execute(
-      "INSERT INTO embeddings (workspace_id, path, chunk_index, text, embedding, model) VALUES ($1, $2, $3, $4, $5, $6)",
-      [workspaceId, path, insert.chunkIndex, insert.text, JSON.stringify(insert.embedding), model],
+      "INSERT INTO embeddings (workspace_id, file_id, path, chunk_index, text, embedding, model) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      [workspaceId, fileId, path, insert.chunkIndex, insert.text, JSON.stringify(insert.embedding), model],
     );
   }
 }

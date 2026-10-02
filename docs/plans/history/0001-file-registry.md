@@ -1,7 +1,7 @@
 <!-- owt:start -->
 # Plan: File registry in DB
 
-Status: approved
+Status: done
 Runtime: host-waived
 Origin: grill session (media-embeds design) 2026-10-02
 Spec: -
@@ -70,9 +70,48 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        SELECT * FROM files WHERE workspace_id = <id>). -->
   <!-- executed 2026-10-02: implemented as mini-planned; typecheck and
        build green; manual query spot-check left to user on next dev run. -->
-- [ ] 3. Key AI embeddings by files.id instead of path string
+- [x] 3. Key AI embeddings by files.id instead of path string
   Blocked by: 2
-  <!-- Steps: add file_id FK to embeddings (migration 4), populate during
+  <!-- mini-plan (2026-10-02):
+       Steps:
+       1. Migration 4 in src-tauri/src/lib.rs: ALTER TABLE embeddings ADD
+          COLUMN file_id INTEGER REFERENCES files(id); backfill
+          UPDATE ... SET file_id = (SELECT f.id FROM files f WHERE
+          f.workspace_id = embeddings.workspace_id AND f.path =
+          embeddings.path) WHERE file_id IS NULL (works only if files rows
+          exist by then - rows still NULL after backfill get populated by
+          the next reindex); CREATE UNIQUE INDEX
+          idx_embeddings_ws_file_chunk ON embeddings(workspace_id,
+          file_id, chunk_index). Column stays nullable (SQLite ALTER
+          limitation); new writes always set it.
+       2. fileRegistry.ts: add ensureFileId(workspaceId, path) - returns
+          existing id or registers the file on the spot (covers the race
+          where reEmbedPaths fires before the debounced registry sync
+          sees a brand-new file).
+       3. embeddingStore.ts: replaceEmbeddings signature becomes
+          (workspaceId, fileId, path, inserts, model). DELETE FROM
+          embeddings WHERE workspace_id = $1 AND (path = $2 OR file_id =
+          $3) - the OR handles registry renames (old path, old id) and
+          normal re-embeds (same id). INSERTs carry both file_id and path
+          (path column kept: retrieval.ts displays it). selectEmbeddings
+          unchanged.
+       4. indexing.ts: embedFile resolves fileId = ensureFileId(...)
+          before replaceEmbeddings; indexWorkspace starts with a full
+          DELETE FROM embeddings WHERE workspace_id = $1 (a full reindex
+          rebuilds everything, and this clears rows orphaned by
+          renames/deletes that reEmbedPaths never touches).
+       Files/symbols: src-tauri/src/lib.rs, src/lib/fileRegistry.ts,
+       src/lib/ai/embeddingStore.ts, src/lib/ai/indexing.ts
+       Verify: npx tsc --noEmit; npm run build; manual dev run:
+       reindex a workspace, then SELECT e.file_id, e.chunk_index,
+       f.path FROM embeddings e JOIN files f ON f.id = e.file_id -
+       expect non-NULL file_id on all rows after reindex. -->
+  <!-- executed 2026-10-02: implemented as mini-planned (migration 4,
+       ensureFileId, replaceEmbeddings by file_id with path-OR-id delete,
+       full-reindex wipe). Deviation: none in scope. Typecheck and build
+       green; manual reindex-join check left to user on next dev run. -->
+  <!-- original scope note (superseded by mini-plan above):
+       Steps: add file_id FK to embeddings (migration 4), populate during
        next reindex, update embeddingStore.ts queries; keep model column.
        Files/symbols: src-tauri/src/lib.rs, src/lib/ai/embeddingStore.ts,
        src/lib/ai/indexing.ts

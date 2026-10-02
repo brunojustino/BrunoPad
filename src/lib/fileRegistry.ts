@@ -63,3 +63,19 @@ export async function getFileId(
   );
   return rows[0]?.id ?? null;
 }
+
+export async function ensureFileId(
+  workspaceId: number,
+  path: string,
+): Promise<number> {
+  const existing = await getFileId(workspaceId, path);
+  if (existing !== null) return existing;
+  const db = await getDb();
+  await db.execute(
+    "INSERT INTO files (workspace_id, path) VALUES ($1, $2) ON CONFLICT(workspace_id, path) DO NOTHING",
+    [workspaceId, path],
+  );
+  const id = await getFileId(workspaceId, path);
+  if (id === null) throw new Error(`failed to register file: ${path}`);
+  return id;
+}
