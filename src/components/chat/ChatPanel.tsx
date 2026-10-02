@@ -7,6 +7,8 @@ import {
   type AiProviderConfig,
   type AiProviderId,
 } from "../../lib/ai/settings";
+import { indexWorkspace } from "../../lib/ai/embeddings";
+import { getCurrentWorkspace } from "../../lib/workspace";
 
 type ChatView = "loading" | "settings" | "chat";
 
@@ -29,6 +31,32 @@ export function ChatPanel() {
     })();
   }, []);
 
+  const [indexing, setIndexing] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [indexError, setIndexError] = useState<string | null>(null);
+
+  const indexNow = async () => {
+    const ws = await getCurrentWorkspace();
+    if (!ws) {
+      setIndexError("No workspace open");
+      return;
+    }
+    setIndexing(true);
+    setIndexError(null);
+    try {
+      await indexWorkspace(ws.id, ws.path, (done, total) =>
+        setProgress(`${done}/${total}`),
+      );
+      setProgress(null);
+    } catch (err) {
+      console.error("[chat] index failed", err);
+      setIndexError(String(err));
+      setProgress(null);
+    } finally {
+      setIndexing(false);
+    }
+  };
+
   if (view === "loading") {
     return <div className="p-3 text-sm text-neutral-500">Loading…</div>;
   }
@@ -49,6 +77,18 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full flex-col">
+      <div className="flex h-8 items-center gap-2 border-b border-neutral-200 px-2">
+        <button
+          className="rounded px-1.5 py-0.5 text-xs text-neutral-500 hover:bg-neutral-200 disabled:opacity-50"
+          disabled={indexing}
+          onClick={() => void indexNow()}
+          title="Chunk + embed every .md file in the workspace"
+        >
+          {indexing ? "Indexing…" : "Index workspace"}
+        </button>
+        {progress && <span className="text-xs text-neutral-500">{progress}</span>}
+        {indexError && <span className="truncate text-xs text-red-600">{indexError}</span>}
+      </div>
       <div className="flex-1 overflow-y-auto p-3 text-sm text-neutral-400">
         Ask questions about your workspace…
       </div>

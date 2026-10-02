@@ -6,6 +6,7 @@ import { FileTree } from "./components/FileTree";
 import { watchWorkspace } from "./lib/watcher";
 import { loadPaneLayout, savePaneLayout } from "./lib/panes";
 import { PaneArea, nameFromPath } from "./components/PaneArea";
+import { reEmbedPaths } from "./lib/ai/embeddings";
 
 function App() {
   const [workspace, setWorkspaceState] = useState<UserWorkspace | null>(null);
@@ -37,12 +38,26 @@ function App() {
   useEffect(() => {
     if (!workspace) return;
     let unwatch: (() => void) | undefined;
-    void watchWorkspace(workspace.path, () => setTreeVersion((v) => v + 1))
+    let reEmbedTimer: ReturnType<typeof setTimeout> | undefined;
+    let reEmbedPending: string[] = [];
+    void watchWorkspace(workspace.path, (paths) => {
+      setTreeVersion((v) => v + 1);
+      reEmbedPending.push(...paths);
+      clearTimeout(reEmbedTimer);
+      reEmbedTimer = setTimeout(() => {
+        const changed = reEmbedPending;
+        reEmbedPending = [];
+        void reEmbedPaths(workspace.id, changed);
+      }, 1000);
+    })
       .then((fn) => {
         unwatch = fn;
       })
       .catch((err) => console.error("[watcher] failed", err));
-    return () => unwatch?.();
+    return () => {
+      unwatch?.();
+      clearTimeout(reEmbedTimer);
+    };
   }, [workspace]);
 
   const openFile = useCallback((filePath: string) => {

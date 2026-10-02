@@ -69,7 +69,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - runtime smoke (user-run): open chat panel -> settings form ->
             save key (openrouter) -> restart -> config + key presence
             restored; key NOT in SQLite (inspect brunopad.db) -->
-- [ ] 2. Chunk + embed pipeline: workspace .md -> chunks -> embeddings table
+- [x] 2. Chunk + embed pipeline: workspace .md -> chunks -> embeddings table
   Blocked by: 1
   <!-- mini-plan filled at execution time:
        Steps:
@@ -160,6 +160,14 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 
+- Task 2 (2026-10-02): deviation - the embeddings table lands as
+  migration v3 (task 1 already shipped v2 for ai_settings). Watcher
+  re-embed lives in App.tsx (debounced 1s over WatchEvent.paths);
+  watcher.ts's callback now passes changed paths through. Embedding
+  requests batch 16 chunks per POST. Re-embed skips silently when no
+  key is configured (openrouter without OPENROUTER_API_KEY). Verify:
+  `npm run build` green, `cargo check` green. Runtime smoke pending
+  user run.
 - Task 1 (2026-10-02): deviation (user decision) - no keyring/keychain
   storage yet; the OpenRouter key is read from `.env`
   (`OPENROUTER_API_KEY`, exposed via `loadEnv` + `define` in

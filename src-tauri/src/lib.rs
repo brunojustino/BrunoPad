@@ -36,6 +36,23 @@ pub fn run() {
     );
   ",
     kind: MigrationKind::Up,
+  }, Migration {
+    version: 3,
+    description: "create_embeddings",
+    sql: "
+    CREATE TABLE embeddings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      workspace_id INTEGER NOT NULL REFERENCES user_workspaces(id) ON DELETE CASCADE,
+      path TEXT NOT NULL,
+      chunk_index INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      embedding TEXT NOT NULL,
+      model TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (workspace_id, path, chunk_index)
+    );
+  ",
+    kind: MigrationKind::Up,
   }];
 
   tauri::Builder::default()
