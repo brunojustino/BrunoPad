@@ -3,6 +3,11 @@ import { getDb } from "./db";
 
 export type PaneLayout = SerializedDockview;
 
+function isDockviewLayout(value: unknown): value is PaneLayout {
+  const grid = (value as PaneLayout | null)?.grid;
+  return !!grid && (grid as { root?: { type?: string } }).root?.type === "branch";
+}
+
 export async function loadPaneLayout(
   workspaceId: number,
 ): Promise<PaneLayout | null> {
@@ -13,8 +18,10 @@ export async function loadPaneLayout(
   );
   if (!rows[0]) return null;
   try {
-    const parsed = JSON.parse(rows[0].layout) as PaneLayout;
-    return parsed && typeof parsed === "object" ? parsed : null;
+    const parsed: unknown = JSON.parse(rows[0].layout);
+    // valid JSON of the wrong shape (e.g. pre-dockview mosaic
+    // `{ tree, panes }` layouts) resets to an empty layout
+    return isDockviewLayout(parsed) ? parsed : null;
   } catch (err) {
     console.error("[panes] corrupt layout, resetting", err);
     return null;

@@ -56,7 +56,11 @@ export function PaneArea(props: PaneAreaProps) {
     const { api } = event;
     props.onApiReady(api);
     if (initialLayoutRef.current) {
-      api.fromJSON(initialLayoutRef.current);
+      try {
+        api.fromJSON(initialLayoutRef.current);
+      } catch (err) {
+        console.error("[panes] restore failed, starting empty", err);
+      }
     }
     // accept external HTML5 drags that carry our file payload so dockview
     // shows its VS Code-style drop overlays for them
