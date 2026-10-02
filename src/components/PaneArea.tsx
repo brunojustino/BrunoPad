@@ -9,6 +9,7 @@ import {
 } from "dockview-react";
 import "dockview-react/dist/styles/dockview.css";
 import { MarkdownEditor } from "./MarkdownEditor";
+import { ChatPanel } from "./chat/ChatPanel";
 
 const FILE_MIME = "application/x-brunopad-file";
 
@@ -41,7 +42,11 @@ function MarkdownPane(props: IDockviewPanelProps) {
   );
 }
 
-const components = { markdown: MarkdownPane };
+function ChatPane() {
+  return <ChatPanel />;
+}
+
+const components = { markdown: MarkdownPane, chat: ChatPane };
 
 interface PaneAreaProps {
   initialLayout: SerializedDockview | null;

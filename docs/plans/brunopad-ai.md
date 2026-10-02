@@ -32,7 +32,7 @@ model (model stored per row).
 
 Ordered; "Blocked by" lists task numbers that must finish first.
 
-- [ ] 1. Provider settings + API key storage + chat panel shell
+- [x] 1. Provider settings + API key storage + chat panel shell
   Blocked by: -
   <!-- mini-plan filled at execution time:
        Steps:
@@ -160,6 +160,17 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 
+- Task 1 (2026-10-02): deviation (user decision) - no keyring/keychain
+  storage yet; the OpenRouter key is read from `.env`
+  (`OPENROUTER_API_KEY`, exposed via `loadEnv` + `define` in
+  vite.config.ts, not a `VITE_`-prefixed var). Keychain storage is
+  deferred to a pre-release task; the settings form shows the key's
+  presence read-only instead of an editable field. Default chat model
+  preset is `stealth/space-bunny-alpha` (user-picked, still editable).
+  The chat component is registered in PaneArea.tsx (dockview's
+  component map lives there); App.tsx only adds the "AI" header button.
+  Verify: `npm run build` green, `cargo check` green. Runtime smoke
+  pending user run.
 - Planning (2026-10-02): OpenRouter embeddings endpoint confirmed live
   (OpenAI-compatible, e.g. openai/text-embedding-3-small); Ollama and LM
   Studio also speak OpenAI-compatible /v1 - hence the single

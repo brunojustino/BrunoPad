@@ -61,6 +61,23 @@ function App() {
     });
   }, []);
 
+  const openChat = useCallback(() => {
+    const api = dockviewApi.current;
+    if (!api) return;
+    const existing = api.panels.find((p) => p.params?.isChat);
+    if (existing) {
+      existing.api.setActive();
+      return;
+    }
+    api.addPanel({
+      id: `chat-${Date.now()}`,
+      component: "chat",
+      title: "AI",
+      params: { isChat: true },
+      position: { direction: "right" },
+    });
+  }, []);
+
   const onApiReady = useCallback((api: DockviewApi) => {
     dockviewApi.current = api;
   }, []);
@@ -96,6 +113,13 @@ function App() {
         {workspace && (
           <span className="truncate text-neutral-500">{workspace.path}</span>
         )}
+        <button
+          className="ml-auto rounded px-1.5 py-0.5 text-xs text-neutral-500 hover:bg-neutral-200"
+          onClick={openChat}
+          title="Open AI chat"
+        >
+          AI
+        </button>
       </header>
       {workspace ? (
         <div className="flex flex-1 overflow-hidden">

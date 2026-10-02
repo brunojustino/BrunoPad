@@ -26,6 +26,16 @@ pub fn run() {
     );
   ",
     kind: MigrationKind::Up,
+  }, Migration {
+    version: 2,
+    description: "create_ai_settings",
+    sql: "
+    CREATE TABLE ai_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  ",
+    kind: MigrationKind::Up,
   }];
 
   tauri::Builder::default()
