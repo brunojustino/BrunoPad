@@ -1,36 +1,23 @@
-import { getLeaves, type MosaicNode } from "react-mosaic-component";
+import type { SerializedDockview } from "dockview-react";
 import { getDb } from "./db";
 
-export interface PaneLayout {
-  tree: MosaicNode<string> | null;
-  panes: Record<string, string>;
-}
+export type PaneLayout = SerializedDockview;
 
-export async function loadPaneLayout(workspaceId: number): Promise<PaneLayout> {
+export async function loadPaneLayout(
+  workspaceId: number,
+): Promise<PaneLayout | null> {
   const db = await getDb();
   const rows = await db.select<{ layout: string }[]>(
     "SELECT layout FROM pane_layouts WHERE workspace_id = $1 ORDER BY id DESC LIMIT 1",
     [workspaceId],
   );
-  if (!rows[0]) return { tree: null, panes: {} };
+  if (!rows[0]) return null;
   try {
     const parsed = JSON.parse(rows[0].layout) as PaneLayout;
-    const tree = parsed.tree ?? null;
-    let panes = parsed.panes ?? {};
-    if (tree) {
-      // drop orphan pane entries whose ids are not leaves of the tree
-      // (guards against corrupted layouts saved by older bugs)
-      const leaves = new Set<string>(getLeaves(tree));
-      panes = Object.fromEntries(
-        Object.entries(panes).filter(([id]) => leaves.has(id)),
-      );
-    } else {
-      panes = {};
-    }
-    return { tree, panes };
+    return parsed && typeof parsed === "object" ? parsed : null;
   } catch (err) {
     console.error("[panes] corrupt layout, resetting", err);
-    return { tree: null, panes: {} };
+    return null;
   }
 }
 

@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
-import type { MosaicNode } from "react-mosaic-component";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { DockviewApi, SerializedDockview } from "dockview-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWorkspace, setWorkspace, type UserWorkspace } from "./lib/workspace";
 import { FileTree } from "./components/FileTree";
 import { watchWorkspace } from "./lib/watcher";
 import { loadPaneLayout, savePaneLayout } from "./lib/panes";
-import { PaneArea } from "./components/PaneArea";
+import { PaneArea, nameFromPath } from "./components/PaneArea";
 
 function App() {
   const [workspace, setWorkspaceState] = useState<UserWorkspace | null>(null);
   const [busy, setBusy] = useState(false);
   const [treeVersion, setTreeVersion] = useState(0);
-  const [tree, setTree] = useState<MosaicNode<string> | null>(null);
-  const [panes, setPanes] = useState<Record<string, string>>({});
+  const [layout, setLayout] = useState<SerializedDockview | null>(null);
+  const [layoutReady, setLayoutReady] = useState(false);
+  const dockviewApi = useRef<DockviewApi | undefined>(undefined);
 
   useEffect(() => {
     void getCurrentWorkspace()
@@ -23,11 +24,14 @@ function App() {
   useEffect(() => {
     if (!workspace) return;
     void loadPaneLayout(workspace.id)
-      .then((layout) => {
-        setTree(layout.tree);
-        setPanes(layout.panes);
+      .then((loaded) => {
+        setLayout(loaded);
+        setLayoutReady(true);
       })
-      .catch((err) => console.error("[panes] load failed", err));
+      .catch((err) => {
+        console.error("[panes] load failed", err);
+        setLayoutReady(true);
+      });
   }, [workspace]);
 
   useEffect(() => {
@@ -41,38 +45,32 @@ function App() {
     return () => unwatch?.();
   }, [workspace]);
 
-  useEffect(() => {
-    if (!workspace) return;
-    savePaneLayout(workspace.id, { tree, panes });
-  }, [workspace, tree, panes]);
-
-  const openFile = (filePath: string) => {
-    if (Object.values(panes).includes(filePath)) return;
-    const emptyEntry = Object.entries(panes).find(([, p]) => !p);
-    if (emptyEntry) {
-      setPanes({ ...panes, [emptyEntry[0]]: filePath });
+  const openFile = useCallback((filePath: string) => {
+    const api = dockviewApi.current;
+    if (!api) return;
+    const existing = api.panels.find((p) => p.params?.filePath === filePath);
+    if (existing) {
+      existing.api.setActive();
       return;
     }
-    if (!tree || Object.keys(panes).length === 0) {
-      const id = `pane-open-${Date.now()}`;
-      setTree(id);
-      setPanes({ ...panes, [id]: filePath });
-      return;
-    }
-    // no empty pane: replace the first pane's content
-    const firstId = Object.keys(panes)[0];
-    setPanes({ ...panes, [firstId]: filePath });
-  };
-
-  const openFileInPane = useCallback((paneId: string, filePath: string) => {
-    setPanes((prev) => ({ ...prev, [paneId]: filePath }));
+    api.addPanel({
+      id: `file-${Date.now()}`,
+      component: "markdown",
+      title: nameFromPath(filePath),
+      params: { filePath },
+    });
   }, []);
 
-  const closePane = useCallback((paneId: string) => {
-    // keep the pane (emptied) so the mosaic tree stays consistent and
-    // openFile can always reuse it
-    setPanes((prev) => ({ ...prev, [paneId]: "" }));
+  const onApiReady = useCallback((api: DockviewApi) => {
+    dockviewApi.current = api;
   }, []);
+
+  const onLayoutChange = useCallback(
+    (serialized: SerializedDockview) => {
+      if (workspace) savePaneLayout(workspace.id, serialized);
+    },
+    [workspace],
+  );
 
   const pickWorkspace = async () => {
     setBusy(true);
@@ -81,8 +79,8 @@ function App() {
       if (dir) {
         const saved = await setWorkspace(dir);
         setWorkspaceState(saved);
-        setTree(null);
-        setPanes({});
+        setLayout(null);
+        setLayoutReady(false);
       }
     } catch (err) {
       console.error("[workspace] pick failed", err);
@@ -120,13 +118,13 @@ function App() {
             </div>
           </aside>
           <main className="flex-1 overflow-hidden">
-            <PaneArea
-              tree={tree}
-              panes={panes}
-              onTreeChange={setTree}
-              onDropFile={openFileInPane}
-              onClosePane={closePane}
-            />
+            {layoutReady ? (
+              <PaneArea
+                initialLayout={layout}
+                onLayoutChange={onLayoutChange}
+                onApiReady={onApiReady}
+              />
+            ) : null}
           </main>
         </div>
       ) : (

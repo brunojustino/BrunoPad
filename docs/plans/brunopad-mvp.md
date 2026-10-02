@@ -177,6 +177,8 @@ Ordered; "Blocked by" lists task numbers that must finish first.
          rename both, delete both; verify on disk -->
 - [x] 8. react-mosaic panes: drag file in, VS Code-style edge split, serialize layout to SQLite, restore on restart
   Blocked by: 7
+  <!-- Superseded by task 13 (ADR-0006): implementation existed but react-dnd
+       drag was broken on React 19; dockview replaces the pane system. -->
 - [x] 9. BlockNote in panes: .md -> blocks on load, blocks -> .md on save
   Blocked by: 8
 - [ ] 10. Verify BlockNote native behaviors: block drag, slash menu, heading markers
@@ -202,6 +204,28 @@ Ordered; "Blocked by" lists task numbers that must finish first.
   Blocked by: 5, 10
 - [ ] 12. Ghost-text autocomplete on typing pause
   Blocked by: 11
+- [x] 13. Replace react-mosaic panes with dockview (ADR-0006)
+  Blocked by: -
+  <!-- mini-plan filled at execution time:
+       Steps:
+       1. Pins: dockview@8.4.0, dockview-react@8.4.0 (exact); remove
+          react-mosaic-component (and its react-dnd dep tree).
+       2. Rewrite src/components/PaneArea.tsx: DockviewReact + panel
+          component rendering MarkdownEditor with params.filePath;
+          import dockview css + theme class.
+       3. Persistence via src/lib/panes.ts: load -> api.fromJSON on
+          onReady; save: api.onDidLayoutChange debounced 300ms ->
+          api.toJSON -> pane_layouts (schema unchanged).
+       4. External drag: api.onUnhandledDragOver -> accept;
+          onDidDrop -> addPanel({ id, params: { filePath } }) - edge
+          drop = split, tab drop = group.
+       5. Click-to-open: addPanel or focus existing panel with same
+          file path.
+       Files: package.json, package-lock.json, src/components/PaneArea.tsx,
+       src/lib/panes.ts, src/App.tsx
+       Verify: npm run build -> exit 0; cargo check -> exit 0;
+       runtime smoke (user-run): drag file onto pane edge -> split;
+       drop on tab bar -> group; restart -> layout restored -->
 
 ## Notes
 
@@ -217,4 +241,5 @@ Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 - Task 7 (2026-10-01): deviation - mini-plan's "+ file at root" header button replaced with a "change workspace" button (more useful now; root-level create needs an imperative FileTree API - deferred; create works by right-clicking any existing folder). FileTree rewritten with lifted expansion state, so CRUD refreshes no longer collapse folders (also softens the task-6 remount trade-off). Verify: build green, cargo check green. Runtime smoke pending user run.
 - Task 8 (2026-10-01): deviation - MosaicZeroState in v7 accepts only `createNode`, so a custom zero-state div is used. Editor placeholder renders file name; real content lands with task 9 (BlockNote). Persisted layout = `{ tree, panes }` JSON via DELETE+INSERT per save (debounced 300ms). Verify: build green, cargo check green. Runtime smoke pending user run (open 2 files split, restart, layout restored).
 - Task 9 (2026-10-01): no deviations. BlockNote 0.55.0 (core/react/mantine). Load: readTextFile -> tryParseMarkdownToBlocks -> replaceBlocks; save: useEditorChange -> 500ms debounce -> blocksToMarkdownLossy -> writeTextFile, guarded so the initial load doesn't write back. Build green (bundle grew to 1.3MB main chunk - code-splitting deferred), cargo check green. Runtime smoke pending user run.
+- Task 13 (2026-10-02): triggered by task 10 checklist failure - react-dnd (hardwired inside react-mosaic) is broken on React 19 upstream (#3675: isDragging false on downward drags) and cancels unrecognized native drags; recorded ADR-0006 superseding the react-mosaic portion of ADR-0003. dockview 8.4.0 pinned exact (react-dnd gone: 20 packages removed). Deviations: StrictMode re-enabled (its suppression existed only for react-dnd; getDb dedupe already makes double-mount safe) and FileTree's text/plain dragstart workaround dropped (react-dnd interference gone). Persisted layout shape changed from mosaic `{ tree, panes }` to dockview serialization; old saved layouts reset on parse failure. Verify: build green, cargo check green. Runtime smoke pending user run. Main chunk 1.55MB (code-splitting deferred).
 <!-- owt:end -->
