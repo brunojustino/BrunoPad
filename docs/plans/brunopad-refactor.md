@@ -58,7 +58,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check -> exit 0
        - runtime smoke (user-run): openrouter chat still authenticates -->
 
-- [ ] 3. ChatPanel split (SRP)
+- [x] 3. ChatPanel split (SRP)
   Blocked by: 1
   <!-- mini-plan filled at execution time:
        Steps:
@@ -127,6 +127,11 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology, ADRs produced.
 
+- Task 3 (2026-10-02): no deviations. ChatUiMessage lives in
+  useChatSession.ts; inline chat error moved to a row between messages
+  and the composer (same visibility). ChatPanel now ~100 lines.
+  Verify: `npm run build` green, `cargo check` green. Runtime smoke
+  pending user run.
 - Task 2 (2026-10-02): no deviations. envSecretSource still maps
   openrouter -> import.meta.env.OPENROUTER_API_KEY internally; presets
   carry their SecretSource; getApiKey is a one-line preset dispatch.
