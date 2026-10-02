@@ -3,15 +3,14 @@ import type { DockviewApi, SerializedDockview } from "dockview-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWorkspace, setWorkspace, type UserWorkspace } from "./lib/workspace";
 import { FileTree } from "./components/FileTree";
-import { watchWorkspace } from "./lib/watcher";
 import { loadPaneLayout, savePaneLayout } from "./lib/panes";
-import { PaneArea, nameFromPath } from "./components/PaneArea";
-import { reEmbedPaths } from "./lib/ai/indexing";
+import { PaneArea } from "./components/PaneArea";
+import { openChatPanel, openMarkdownPanel } from "./lib/panels";
+import { useWorkspaceWatcher } from "./lib/useWorkspaceWatcher";
 
 function App() {
   const [workspace, setWorkspaceState] = useState<UserWorkspace | null>(null);
   const [busy, setBusy] = useState(false);
-  const [treeVersion, setTreeVersion] = useState(0);
   const [layout, setLayout] = useState<SerializedDockview | null>(null);
   const [layoutReady, setLayoutReady] = useState(false);
   const dockviewApi = useRef<DockviewApi | undefined>(undefined);
@@ -35,62 +34,16 @@ function App() {
       });
   }, [workspace]);
 
-  useEffect(() => {
-    if (!workspace) return;
-    let unwatch: (() => void) | undefined;
-    let reEmbedTimer: ReturnType<typeof setTimeout> | undefined;
-    let reEmbedPending: string[] = [];
-    void watchWorkspace(workspace.path, (paths) => {
-      setTreeVersion((v) => v + 1);
-      reEmbedPending.push(...paths);
-      clearTimeout(reEmbedTimer);
-      reEmbedTimer = setTimeout(() => {
-        const changed = reEmbedPending;
-        reEmbedPending = [];
-        void reEmbedPaths(workspace.id, changed);
-      }, 1000);
-    })
-      .then((fn) => {
-        unwatch = fn;
-      })
-      .catch((err) => console.error("[watcher] failed", err));
-    return () => {
-      unwatch?.();
-      clearTimeout(reEmbedTimer);
-    };
-  }, [workspace]);
+  const treeVersion = useWorkspaceWatcher(workspace);
 
   const openFile = useCallback((filePath: string) => {
     const api = dockviewApi.current;
-    if (!api) return;
-    const existing = api.panels.find((p) => p.params?.filePath === filePath);
-    if (existing) {
-      existing.api.setActive();
-      return;
-    }
-    api.addPanel({
-      id: `file-${Date.now()}`,
-      component: "markdown",
-      title: nameFromPath(filePath),
-      params: { filePath },
-    });
+    if (api) openMarkdownPanel(api, filePath);
   }, []);
 
   const openChat = useCallback(() => {
     const api = dockviewApi.current;
-    if (!api) return;
-    const existing = api.panels.find((p) => p.params?.isChat);
-    if (existing) {
-      existing.api.setActive();
-      return;
-    }
-    api.addPanel({
-      id: `chat-${Date.now()}`,
-      component: "chat",
-      title: "AI",
-      params: { isChat: true },
-      position: { direction: "right" },
-    });
+    if (api) openChatPanel(api);
   }, []);
 
   const onApiReady = useCallback((api: DockviewApi) => {

@@ -75,7 +75,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - cargo check -> exit 0
        - runtime smoke (user-run): settings save, ask, index unchanged -->
 
-- [ ] 4. App.tsx decomposition (SRP)
+- [x] 4. App.tsx decomposition (SRP)
   Blocked by: -
   <!-- mini-plan filled at execution time:
        Steps:
@@ -127,6 +127,12 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology, ADRs produced.
 
+- Task 4 (2026-10-02): no deviations. nameFromPath moved from
+  PaneArea.tsx into lib/panels.ts (pane-panel concern); FILE_MIME now
+  exported from panels.ts and consumed by FileTree + PaneArea. App.tsx
+  ~155 lines, zero AI/watcher imports.
+  Verify: `npm run build` green, `cargo check` green. Runtime smoke
+  pending user run.
 - Task 3 (2026-10-02): no deviations. ChatUiMessage lives in
   useChatSession.ts; inline chat error moved to a row between messages
   and the composer (same visibility). ChatPanel now ~100 lines.

@@ -10,13 +10,7 @@ import {
 import "dockview-react/dist/styles/dockview.css";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ChatPanel } from "./chat/ChatPanel";
-
-const FILE_MIME = "application/x-brunopad-file";
-
-export function nameFromPath(path: string): string {
-  const sep = path.includes("\\") ? "\\" : "/";
-  return path.slice(path.lastIndexOf(sep) + 1);
-}
+import { FILE_MIME, nameFromPath } from "../lib/panels";
 
 function dropDirection(position: string): "left" | "right" | "above" | "below" | "within" {
   switch (position) {

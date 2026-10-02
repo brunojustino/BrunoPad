@@ -9,13 +9,12 @@ import {
   renameEntry,
 } from "../lib/explorer";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
+import { FILE_MIME } from "../lib/panels";
 
 interface FileTreeProps {
   rootPath: string;
   onSelectFile: (path: string) => void;
 }
-
-const FILE_MIME = "application/x-brunopad-file";
 
 const FILE_NAME_PLACEHOLDER = "untitled.md";
 const FOLDER_NAME_PLACEHOLDER = "untitled";
