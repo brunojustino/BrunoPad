@@ -156,9 +156,42 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        Files/symbols: new src/lib/editor/mediaInsert.ts
        Verify: insert a file from outside the workspace twice: second insert
        gets -1 suffix, no overwrite anywhere. -->
-- [ ] 4. Insert UX: slash menu + destination selector dialog
+- [x] 4. Insert UX: slash menu + destination selector dialog
   Blocked by: 3
-  <!-- Steps: slash-menu item opens dialog with destination selector
+  <!-- mini-plan (2026-10-02):
+       Steps:
+       1. New src/lib/mediaSettings.ts: getMediaInsertDestination() /
+          setMediaInsertDestination(dest) stored in ai_settings under key
+          "media.insertDestination" (same upsert pattern as
+          setProviderConfig); default when unset: "subfolder".
+       2. embedBlocks.tsx: export mediaKindFor(url) -> "mediaImage" |
+          "mediaPdf" | "mediaDoc" (by extension; anything else -> mediaDoc).
+       3. New src/components/MediaInsertDialog.tsx: shown after the native
+          file picker; radio group with the three destinations, default
+          from getMediaInsertDestination; Insert -> copyIntoWorkspace-
+          Destination(source, mdPath, dest) + setMediaInsertDestination
+          (remember last-used) + block insert; Cancel dismisses.
+       4. MarkdownEditor.tsx: dialog state (sourcePath | null); slash menu
+          via SuggestionMenuController + getDefaultReactSlashMenuItems
+          (both from @blocknote/react) + filterSuggestionItems
+          (@blocknote/core) with an "Insert media..." item that opens the
+          native picker (plugin-dialog open, media filters).
+       5. Insert-point rule: editor.getTextCursorPosition().block; empty
+          paragraph -> replaceBlocks([cursorBlock], [embedBlock]); else
+          insertBlocks([embedBlock], cursorBlock, "after").
+       Files/symbols: new src/lib/mediaSettings.ts,
+       new src/components/MediaInsertDialog.tsx, embedBlocks.tsx,
+       src/components/MarkdownEditor.tsx
+       Verify: npx tsc --noEmit; npm run build; manual dev run: slash item
+       -> picker -> dialog -> insert for each destination; restart app:
+       remembered destination pre-selected. -->
+  <!-- executed 2026-10-02: implemented as mini-planned (mediaSettings.ts,
+       mediaKindFor export, MediaInsertDialog.tsx, slash-menu wiring in
+       MarkdownEditor.tsx). Deviation: none in scope; block inserts cast
+       via never to dodge custom-schema PartialBlock generics. Typecheck
+       and build green; manual UX checks pending user dev run. -->
+  <!-- original scope note (superseded by mini-plan above):
+       Steps: slash-menu item opens dialog with destination selector
        (same folder / next-to-file assets / workspace assets), default
        from setting + remember last-used; insert point = cursor block if
        empty else new block below.

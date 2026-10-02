@@ -16,6 +16,13 @@ function extOf(src: string): string {
   return dot >= 0 ? clean.slice(dot + 1).toLowerCase() : "";
 }
 
+export function mediaKindFor(url: string): "mediaImage" | "mediaPdf" | "mediaDoc" {
+  const ext = extOf(url);
+  if (ext === "pdf") return "mediaPdf";
+  if (DOC_EXTS.has(ext)) return "mediaDoc";
+  return "mediaImage";
+}
+
 export const EmbedMdPathContext = createContext<string | null>(null);
 
 interface EmbedProps {

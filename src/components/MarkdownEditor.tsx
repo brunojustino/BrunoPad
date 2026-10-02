@@ -1,13 +1,32 @@
-import { useEffect, useRef } from "react";
-import { useCreateBlockNote, useEditorChange } from "@blocknote/react";
+import { useEffect, useRef, useState } from "react";
+import {
+  useCreateBlockNote,
+  useEditorChange,
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
+} from "@blocknote/react";
+import { filterSuggestionItems } from "@blocknote/core";
 import type { BlockNoteEditor } from "@blocknote/core";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useFileContent } from "../lib/useFileContent";
 import { useGhostText } from "../lib/ai/ghost";
 import { countWords } from "../lib/wordCount";
 import { schemaWithEmbeds, EmbedMdPathContext } from "../lib/editor/embedBlocks";
+import { MediaInsertDialog } from "./MediaInsertDialog";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
+const MEDIA_FILTERS = [
+  {
+    name: "Media",
+    extensions: [
+      "png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico",
+      "pdf", "doc", "docx", "odt", "xls", "xlsx", "ods", "ppt", "pptx", "odp", "rtf",
+    ],
+  },
+  { name: "All files", extensions: ["*"] },
+];
 
 interface MarkdownEditorProps {
   filePath: string;
@@ -17,6 +36,7 @@ interface MarkdownEditorProps {
 export function MarkdownEditor({ filePath, onWordCount }: MarkdownEditorProps) {
   const editor = useCreateBlockNote({ schema: schemaWithEmbeds }) as unknown as BlockNoteEditor;
   const { loaded, error } = useFileContent(editor, filePath);
+  const [insertSource, setInsertSource] = useState<string | null>(null);
 
   const reportWordCount = useRef(onWordCount);
   reportWordCount.current = onWordCount;
@@ -28,6 +48,11 @@ export function MarkdownEditor({ filePath, onWordCount }: MarkdownEditorProps) {
   useEffect(() => {
     if (loaded) reportWordCount.current?.(countWords(editor));
   }, [loaded, editor]);
+
+  const openInsertDialog = async () => {
+    const file = await openDialog({ multiple: false, filters: MEDIA_FILTERS });
+    if (typeof file === "string") setInsertSource(file);
+  };
 
   const ghost = useGhostText(editor);
   const ghostWrapRef = useRef<HTMLDivElement | null>(null);
@@ -48,7 +73,26 @@ export function MarkdownEditor({ filePath, onWordCount }: MarkdownEditorProps) {
   return (
     <EmbedMdPathContext.Provider value={filePath}>
       <div ref={ghostWrapRef} className="relative h-full">
-        <BlockNoteView editor={editor} theme="dark" className="h-full" />
+        <BlockNoteView editor={editor} theme="dark" className="h-full">
+          <SuggestionMenuController
+            triggerCharacter="/"
+            getItems={async (query) =>
+              filterSuggestionItems(
+                [
+                  ...getDefaultReactSlashMenuItems(editor),
+                  {
+                    title: "Insert media…",
+                    subtext: "Copy an image, pdf or doc from disk",
+                    onItemClick: () => {
+                      void openInsertDialog();
+                    },
+                  },
+                ],
+                query,
+              )
+            }
+          />
+        </BlockNoteView>
         {ghost.suggestion && (
           <span
             className="pointer-events-none absolute select-none text-fog-500"
@@ -56,6 +100,14 @@ export function MarkdownEditor({ filePath, onWordCount }: MarkdownEditorProps) {
           >
             {ghost.suggestion.text}
           </span>
+        )}
+        {insertSource && (
+          <MediaInsertDialog
+            sourcePath={insertSource}
+            mdFilePath={filePath}
+            editor={editor}
+            onClose={() => setInsertSource(null)}
+          />
         )}
       </div>
     </EmbedMdPathContext.Provider>
