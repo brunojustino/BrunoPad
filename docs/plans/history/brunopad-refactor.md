@@ -1,7 +1,7 @@
 <!-- owt:start -->
 # Plan: SOLID refactor — module split
 
-Status: approved
+Status: done
 Runtime: host-waived
 Origin: user request 2026-10-02 ("better split the code, SOLID");
 MarkdownEditor extraction added by user approval same day.
@@ -108,7 +108,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
             delete, drag to pane still work; folders stay expanded
             after CRUD -->
 
-- [ ] 6. MarkdownEditor extraction (SRP)
+- [x] 6. MarkdownEditor extraction (SRP)
   Blocked by: 4
   <!-- mini-plan filled at execution time:
        Steps:
@@ -127,6 +127,12 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology, ADRs produced.
 
+- Task 6 (2026-10-02): no deviations. useFileContent owns load +
+  debounced save (incl. markSelfWrite guard) and returns loaded/error;
+  useEditorChange for saving lives in the hook now. MarkdownEditor.tsx
+  is editor UI + ghost overlay wiring only (~50 lines).
+  Verify: `npm run build` green, `cargo check` green. Runtime smoke
+  pending user run.
 - Task 5 (2026-10-02): no deviations. useFileTreeData exposes the
   Draft type too (rename/create UI state stays in FileTree, CRUD +
   cache/expansion state in the hook). Placeholders exported from
