@@ -104,14 +104,15 @@ const createMediaImage = createReactBlockSpec(
           />
           <span
             className="absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize rounded-sm bg-brass-400/40 hover:bg-brass-400/70"
-            onMouseDown={(e) =>
+            onMouseDown={(e) => {
+              const img = (e.currentTarget.previousElementSibling as HTMLImageElement) ?? null;
+              const base = startW > 0 ? startW : img?.offsetWidth ?? 300;
               startResize(e, (dx) => {
-                const base = startW > 0 ? startW : (e.currentTarget.previousElementSibling as HTMLImageElement)?.offsetWidth ?? 300;
                 void editor.updateBlock(block, {
                   props: { width: String(Math.max(120, Math.round(base + dx))) },
                 } as never);
-              })
-            }
+              });
+            }}
           />
         </div>
       );
