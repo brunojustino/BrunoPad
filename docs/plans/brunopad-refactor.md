@@ -93,7 +93,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - runtime smoke (user-run): open file, chat button, external
             edit re-embeds ~1s, layout restores after restart -->
 
-- [ ] 5. FileTree split (SRP)
+- [x] 5. FileTree split (SRP)
   Blocked by: -
   <!-- mini-plan filled at execution time:
        Steps:
@@ -127,6 +127,12 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology, ADRs produced.
 
+- Task 5 (2026-10-02): no deviations. useFileTreeData exposes the
+  Draft type too (rename/create UI state stays in FileTree, CRUD +
+  cache/expansion state in the hook). Placeholders exported from
+  DraftRow.tsx. EntryRow is presentational; recursion stays in
+  FileTree's renderEntry. Verify: `npm run build` green, `cargo check`
+  green. Runtime smoke pending user run.
 - Task 4 (2026-10-02): no deviations. nameFromPath moved from
   PaneArea.tsx into lib/panels.ts (pane-panel concern); FILE_MIME now
   exported from panels.ts and consumed by FileTree + PaneArea. App.tsx
