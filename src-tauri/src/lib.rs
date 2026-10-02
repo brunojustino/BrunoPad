@@ -12,6 +12,41 @@ fn set_media_root(path: String, state: tauri::State<MediaRoot>) {
   *state.0.lock().unwrap() = Some(root);
 }
 
+#[tauri::command]
+fn open_media_path(path: String, state: tauri::State<MediaRoot>) -> Result<(), String> {
+  let canonical = fs::canonicalize(&path).map_err(|e| e.to_string())?;
+  let root = state.0.lock().unwrap().clone();
+  let Some(root) = root else {
+    return Err("media root not set".into());
+  };
+  if !canonical.starts_with(&root) {
+    return Err("outside media root".into());
+  }
+  #[cfg(target_os = "windows")]
+  {
+    std::process::Command::new("cmd")
+      .args(["/c", "start", ""])
+      .arg(&canonical)
+      .spawn()
+      .map_err(|e| e.to_string())?;
+  }
+  #[cfg(target_os = "macos")]
+  {
+    std::process::Command::new("open")
+      .arg(&canonical)
+      .spawn()
+      .map_err(|e| e.to_string())?;
+  }
+  #[cfg(all(unix, not(target_os = "macos")))]
+  {
+    std::process::Command::new("xdg-open")
+      .arg(&canonical)
+      .spawn()
+      .map_err(|e| e.to_string())?;
+  }
+  Ok(())
+}
+
 fn percent_decode(input: &str) -> String {
   let bytes = input.as_bytes();
   let mut out = Vec::with_capacity(bytes.len());
@@ -154,6 +189,21 @@ pub fn run() {
       ON embeddings (workspace_id, file_id, chunk_index);
   ",
     kind: MigrationKind::Up,
+  }, Migration {
+    version: 5,
+    description: "create_embed_geometry",
+    sql: "
+    CREATE TABLE embed_geometry (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+      asset_path TEXT NOT NULL,
+      width INTEGER NOT NULL DEFAULT 0,
+      height INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE (file_id, asset_path)
+    );
+  ",
+    kind: MigrationKind::Up,
   }];
 
   tauri::Builder::default()
@@ -170,7 +220,7 @@ pub fn run() {
         .clone();
       serve_media_file(root, request.uri().path())
     })
-    .invoke_handler(tauri::generate_handler![set_media_root])
+    .invoke_handler(tauri::generate_handler![set_media_root, open_media_path])
     .plugin(
       tauri_plugin_sql::Builder::default()
         .add_migrations("sqlite:brunopad.db", migrations)

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { BlockNoteEditor } from "@blocknote/core";
 import { useEditorChange } from "@blocknote/react";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { applyEmbedGeometry, saveEmbedGeometry } from "./embedGeometry";
 import { markSelfWrite } from "./watcher";
 
 const SAVE_DEBOUNCE_MS = 500;
@@ -18,6 +19,7 @@ export function useFileContent(editor: BlockNoteEditor, filePath: string) {
       try {
         const md = await readTextFile(filePath);
         const blocks = await editor.tryParseMarkdownToBlocks(md);
+        await applyEmbedGeometry(blocks as never, filePath);
         if (cancelled) return;
         await editor.replaceBlocks(editor.document, blocks);
         setLoaded(true);
@@ -37,6 +39,7 @@ export function useFileContent(editor: BlockNoteEditor, filePath: string) {
     saveTimer.current = setTimeout(async () => {
       saving.current = true;
       try {
+        await saveEmbedGeometry(editor as BlockNoteEditor<any, any, any>, filePath);
         const md = await editor.blocksToMarkdownLossy(editor.document);
         await writeTextFile(filePath, md);
         markSelfWrite();

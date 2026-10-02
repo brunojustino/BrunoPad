@@ -1,5 +1,8 @@
 # Media embeds: HTML-in-markdown via custom blocks, assets/ convention, workspace-scoped serving
 
+Status: superseded by ADR-0008 (serialization decision only; assets/
+convention, copy semantics and workspace-scoped serving remain valid).
+
 Brunopad documents are plain markdown, so media embeds (image, PDF,
 doc/docx) are serialized as HTML in the markdown - the native BlockNote
 image block is rejected because its width is lost in markdown export -

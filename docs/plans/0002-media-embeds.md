@@ -59,15 +59,62 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        Files/symbols: src-tauri/src/lib.rs, tauri.conf.json (if asset reuse)
        Verify: npm run tauri dev; image + pdf from two workspace paths load
        via the handler; record whether PDF renders in webview or fallback. -->
-- [ ] 2. Custom block schema: image, pdf frame, doc attachment chip
+- [x] 2. Custom block schema: image, pdf frame, doc attachment chip + geometry store
   Blocked by: 1
-  <!-- Steps: BlockNoteSchema with three custom blocks: resizable image
+  <!-- mini-plan (2026-10-02, revised after ADR 0008 - HTML-in-markdown
+       cannot persist dims in BlockNote 0.55; verified in
+       @blocknote/core htmlToMarkdown.ts):
+       Steps:
+       1. Migration 5 in src-tauri/src/lib.rs: embed_geometry table
+          (id, file_id REFERENCES files(id) ON DELETE CASCADE, asset_path,
+          width INTEGER DEFAULT 0, height INTEGER DEFAULT 0, updated_at,
+          UNIQUE(file_id, asset_path)).
+       2. New src/lib/embedGeometry.ts: selectEmbedGeometry(fileId),
+          upsertEmbedGeometry(fileId, assetPath, width, height),
+          saveEmbedGeometry(editor, mdFilePath) (walks document, upserts
+          for mediaImage/mediaPdf blocks; uses getCurrentWorkspace +
+          ensureFileId), applyEmbedGeometry(blocks, mdFilePath) (maps
+          asset_path -> dims, mutates parsed block props before
+          replaceBlocks).
+       3. New src/lib/editor/embedBlocks.tsx: BlockNoteSchema with
+          ...defaultBlockSpecs + three createReactBlockSpec blocks:
+          - mediaImage: props {url, name, width}; render <img> with
+            bottom-right drag handle (mousedown -> editor.updateBlock
+            width px, min 120); toExternalHTML <img src alt width?>;
+            parse IMG (ext NOT pdf/doc-like) -> {url, name: alt}.
+          - mediaPdf: props {url, name, width=640, height=480}; render
+            iframe with width+height drag handles; toExternalHTML
+            <img src alt> (image syntax); parse IMG with .pdf ext.
+          - mediaDoc: props {url, name}; render chip (icon + name, click
+            -> open_media_path); toExternalHTML <a href>name</a>; parse
+            paragraph with single <a> child whose ext is doc-like.
+          runsBefore ["image"] for image/pdf claims, ["paragraph"] for doc.
+       4. MarkdownEditor.tsx: pass schemaWithEmbeds to useCreateBlockNote.
+       5. useFileContent.ts: after parse -> applyEmbedGeometry(...);
+          in save path -> saveEmbedGeometry(editor, filePath) before
+          markdown export.
+       6. lib.rs: command open_media_path(path) - canonicalize + validate
+          against registered media root, then cmd /c start (win), open
+          (mac), xdg-open (linux) - doc chip click target.
+       Files/symbols: src-tauri/src/lib.rs, new src/lib/embedGeometry.ts,
+       new src/lib/editor/embedBlocks.tsx, src/components/MarkdownEditor.tsx,
+       src/lib/useFileContent.ts
+       Verify: cargo check; npx tsc --noEmit; npm run build; manual dev
+       run: insert each kind, resize, save, reload - reference syntax and
+       geometry survive (dims via DB, checked in devtools DB query);
+       chip click opens file. -->
+  <!-- executed 2026-10-02: implemented as revised mini-plan (migration 5,
+       embedGeometry.ts, embedBlocks.tsx with mediaImage/mediaPdf/mediaDoc,
+       schema + geometry wired into MarkdownEditor/useFileContent,
+       open_media_path command). Deviation: createReactBlockSpec imported
+       from @blocknote/react (docs snippet suggested core; the export
+       actually lives in the react package). cargo check / typecheck /
+       build green. Manual round-trip checks pending user dev run. -->
+  <!-- original scope note (superseded by ADR 0008 pivot):
+       Steps: BlockNoteSchema with three custom blocks: resizable image
        (serializes <img src width>), pdf frame (embed markup + dims),
        doc chip (opens in system viewer). Draft plan: HTML-in-markdown
-       serialization, refs relative to md file (ADR 0007).
-       Files/symbols: new src/lib/editor/embedBlocks.tsx, MarkdownEditor.tsx
-       Verify: typecheck + dev run; insert each kind, resize, save, reload:
-       src and dimensions survive round-trip. -->
+       serialization, refs relative to md file (ADR 0007). -->
 - [ ] 3. Copy-on-insert with destinations and collision renaming
   Blocked by: 2
   <!-- Steps: copy picked file to destination (same folder /
@@ -114,9 +161,14 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 ## Notes
 
-- Serialization: HTML-in-markdown for all three kinds; references relative
-  to the md file. Native BlockNote image block rejected because its width
-  would be lost in blocksToMarkdownLossy (ADR 0007).
+- Serialization (ADR 0008, supersedes the HTML-in-markdown draft): standard
+  markdown references - `![name](assets/x.png|pdf)`, `[name](assets/x.docx)`
+  - distinguished by file extension at parse time; embed geometry
+  (width/height) persisted in the `embed_geometry` DB table keyed by
+  (files.id, asset_path), applied on load, upserted on save. Verified:
+  BlockNote 0.55 markdown export strips img width and drops iframe tags.
+- Serving: custom media:// protocol restricted to the User workspace
+  (task 1, ADR 0007 carries over).
 - Copy-always semantics; collision rename `name-1.ext`; never overwrite.
 - Destinations: same folder / {md dir}/assets/ / {workspace}/assets/;
   paste always -> {workspace}/assets/; loose md fallback -> assets next
