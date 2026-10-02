@@ -1,5 +1,5 @@
-import { getDb } from "../db";
-import { embedTexts } from "./embeddings";
+import { embedTexts } from "./embeddingClient";
+import { selectEmbeddings } from "./embeddingStore";
 import { getApiKey, getProviderConfig } from "./settings";
 
 export interface RetrievedChunk {
@@ -7,13 +7,6 @@ export interface RetrievedChunk {
   chunkIndex: number;
   text: string;
   score: number;
-}
-
-interface EmbeddingRow {
-  path: string;
-  chunk_index: number;
-  text: string;
-  embedding: string;
 }
 
 function cosine(a: number[], b: number[]): number {
@@ -40,11 +33,7 @@ export async function retrieveContext(
   }
   const qVec = (await embedTexts([question], cfg))[0];
   if (!qVec) return [];
-  const db = await getDb();
-  const rows = await db.select<EmbeddingRow[]>(
-    "SELECT path, chunk_index, text, embedding FROM embeddings WHERE workspace_id = $1 AND model = $2",
-    [workspaceId, cfg.embeddingModel],
-  );
+  const rows = await selectEmbeddings(workspaceId, cfg.embeddingModel);
   const scored: RetrievedChunk[] = rows.map((row) => ({
     path: row.path,
     chunkIndex: row.chunk_index,

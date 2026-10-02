@@ -6,7 +6,7 @@ import { FileTree } from "./components/FileTree";
 import { watchWorkspace } from "./lib/watcher";
 import { loadPaneLayout, savePaneLayout } from "./lib/panes";
 import { PaneArea, nameFromPath } from "./components/PaneArea";
-import { reEmbedPaths } from "./lib/ai/embeddings";
+import { reEmbedPaths } from "./lib/ai/indexing";
 
 function App() {
   const [workspace, setWorkspaceState] = useState<UserWorkspace | null>(null);

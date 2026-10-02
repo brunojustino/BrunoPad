@@ -1,39 +1,11 @@
 import { readTextFile } from "@tauri-apps/plugin-fs";
-import { getDb } from "../db";
 import { readDirEntries } from "../explorer";
 import { getApiKey, getProviderConfig, type AiProviderConfig } from "./settings";
 import { chunkMarkdown } from "./chunking";
+import { embedTexts } from "./embeddingClient";
+import { replaceEmbeddings } from "./embeddingStore";
 
 const EMBED_BATCH = 16;
-
-interface EmbeddingsResponse {
-  data: { index: number; embedding: number[] }[];
-}
-
-export async function embedTexts(
-  texts: string[],
-  config: AiProviderConfig,
-): Promise<number[][]> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
-  const apiKey = getApiKey(config.provider);
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-  const res = await fetch(`${config.baseUrl}/embeddings`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ model: config.embeddingModel, input: texts }),
-  });
-  if (!res.ok) {
-    throw new Error(`embeddings request failed: ${res.status} ${await res.text()}`);
-  }
-  const json = (await res.json()) as EmbeddingsResponse;
-  return [...json.data]
-    .sort((a, b) => a.index - b.index)
-    .map((d) => d.embedding);
-}
 
 export async function embedFile(
   workspaceId: number,
@@ -43,23 +15,21 @@ export async function embedFile(
   const cfg = config ?? (await getProviderConfig());
   const md = await readTextFile(path);
   const chunks = chunkMarkdown(md);
-  const db = await getDb();
-  await db.execute("DELETE FROM embeddings WHERE workspace_id = $1 AND path = $2", [
-    workspaceId,
-    path,
-  ]);
-  if (chunks.length === 0) return;
+  if (chunks.length === 0) {
+    await replaceEmbeddings(workspaceId, path, [], cfg.embeddingModel);
+    return;
+  }
   const vectors: number[][] = [];
   for (let i = 0; i < chunks.length; i += EMBED_BATCH) {
     const batch = chunks.slice(i, i + EMBED_BATCH).map((c) => c.text);
     vectors.push(...(await embedTexts(batch, cfg)));
   }
-  for (let i = 0; i < chunks.length; i++) {
-    await db.execute(
-      "INSERT INTO embeddings (workspace_id, path, chunk_index, text, embedding, model) VALUES ($1, $2, $3, $4, $5, $6)",
-      [workspaceId, path, chunks[i].index, chunks[i].text, JSON.stringify(vectors[i]), cfg.embeddingModel],
-    );
-  }
+  const inserts = chunks.map((chunk, i) => ({
+    chunkIndex: chunk.index,
+    text: chunk.text,
+    embedding: vectors[i],
+  }));
+  await replaceEmbeddings(workspaceId, path, inserts, cfg.embeddingModel);
 }
 
 export async function indexWorkspace(

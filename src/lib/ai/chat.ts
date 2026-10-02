@@ -1,4 +1,5 @@
-import { getApiKey, type AiProviderConfig } from "./settings";
+import { aiPostJson } from "./aiHttpClient";
+import type { AiProviderConfig } from "./settings";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -10,18 +11,14 @@ export async function streamChat(
   config: AiProviderConfig,
   onDelta: (text: string) => void,
 ): Promise<void> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const apiKey = getApiKey(config.provider);
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-  const res = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ model: config.chatModel, messages, stream: true }),
-  });
-  if (!res.ok || !res.body) {
-    throw new Error(`chat request failed: ${res.status} ${await res.text()}`);
+  const res = await aiPostJson(
+    config,
+    "/chat/completions",
+    { model: config.chatModel, messages, stream: true },
+    "chat request",
+  );
+  if (!res.body) {
+    throw new Error("chat request failed: empty response body");
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();

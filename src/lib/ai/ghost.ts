@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { BlockNoteEditor } from "@blocknote/core";
 import { useEditorChange } from "@blocknote/react";
 import { getApiKey, getProviderConfig, type AiProviderConfig } from "./settings";
+import { aiPostJson } from "./aiHttpClient";
 
 const PAUSE_MS = 800;
 const TAIL_CHARS = 4000;
@@ -21,15 +22,10 @@ async function requestGhostText(
   tail: string,
   config: AiProviderConfig,
 ): Promise<string | null> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const apiKey = getApiKey(config.provider);
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-  const res = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
+  const res = await aiPostJson(
+    config,
+    "/chat/completions",
+    {
       model: config.chatModel,
       stream: false,
       max_tokens: MAX_TOKENS,
@@ -43,11 +39,9 @@ async function requestGhostText(
         },
         { role: "user", content: tail },
       ],
-    }),
-  });
-  if (!res.ok) {
-    throw new Error(`ghost request failed: ${res.status} ${await res.text()}`);
-  }
+    },
+    "ghost request",
+  );
   const json = (await res.json()) as CompletionResponse;
   const text = json.choices?.[0]?.message?.content;
   if (typeof text !== "string") return null;

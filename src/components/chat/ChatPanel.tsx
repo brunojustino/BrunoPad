@@ -7,7 +7,7 @@ import {
   type AiProviderConfig,
   type AiProviderId,
 } from "../../lib/ai/settings";
-import { indexWorkspace } from "../../lib/ai/embeddings";
+import { indexWorkspace } from "../../lib/ai/indexing";
 import { retrieveContext, type RetrievedChunk } from "../../lib/ai/retrieval";
 import { streamChat, type ChatMessage } from "../../lib/ai/chat";
 import { getCurrentWorkspace } from "../../lib/workspace";
