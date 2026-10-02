@@ -1,7 +1,7 @@
 <!-- owt:start -->
 # Plan: brunopad MVP
 
-Status: approved
+Status: done
 Runtime: host-waived
 <!-- When the last task is ticked, set Status: done and move this file to
      docs/plans/history/ in the same commit (archived plans are read-only records). -->
@@ -202,8 +202,11 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        Verify: user checklist all green + npm run build + cargo check -->
 - [ ] 11. AI chat sidebar: chunk+embed files, embeddings in SQLite, external API; decide key storage first
   Blocked by: 5, 10
+  <!-- MOVED to plan/brunopad-ai tasks 1-3 (OpenRouter-first decisions
+       recorded there). Not executed from this plan. -->
 - [ ] 12. Ghost-text autocomplete on typing pause
   Blocked by: 11
+  <!-- MOVED to plan/brunopad-ai task 4. Not executed from this plan. -->
 - [x] 13. Replace react-mosaic panes with dockview (ADR-0006)
   Blocked by: -
   <!-- mini-plan filled at execution time:

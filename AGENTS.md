@@ -9,7 +9,7 @@ brunopad - a local markdown-first desktop editor ("super-powered text editor"): 
 ## Docs map (lazy loading - read only what the task needs)
 
 - Product brief & phases: docs/spec/product-brief.md
-- Active plan: docs/plans/brunopad-mvp.md
+- Active plan: docs/plans/brunopad-ai.md
 - Planning / implementation workflow: @docs/rules/task-execution.md (load before planning or implementing tasks)
 - Git + docs-update conventions: @docs/rules/git-workflow.md (load before any commit)
 - Agent environment constraints (workspace-root wall, Docker execution): @docs/rules/agent-constraints.md (load before touching paths outside the workspace root or running/building/testing project code; Docker policy rationale in docs/adr/0002-docker-execution-policy.md)
