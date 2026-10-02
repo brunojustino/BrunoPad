@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AI_PROVIDER_PRESETS,
   getApiKey,
@@ -8,9 +8,36 @@ import {
   type AiProviderId,
 } from "../../lib/ai/settings";
 import { indexWorkspace } from "../../lib/ai/embeddings";
+import { retrieveContext, type RetrievedChunk } from "../../lib/ai/retrieval";
+import { streamChat, type ChatMessage } from "../../lib/ai/chat";
 import { getCurrentWorkspace } from "../../lib/workspace";
 
 type ChatView = "loading" | "settings" | "chat";
+
+interface ChatUiMessage {
+  role: "user" | "assistant";
+  content: string;
+  sources?: string[];
+}
+
+const SYSTEM_BASE =
+  "You answer questions about the user's markdown notes in their workspace. " +
+  "Use ONLY the provided context. Mention the source file paths you relied on. " +
+  "If the context is insufficient, say so briefly.";
+
+function buildSystemPrompt(context: RetrievedChunk[]): string {
+  if (context.length === 0) {
+    return (
+      SYSTEM_BASE +
+      "\n\nNo indexed context is available. Say that the workspace has no " +
+      "indexed notes and suggest clicking 'Index workspace'."
+    );
+  }
+  const blocks = context
+    .map((c) => `[source: ${c.path}]\n${c.text}`)
+    .join("\n\n");
+  return `${SYSTEM_BASE}\n\nContext:\n${blocks}`;
+}
 
 export function ChatPanel() {
   const [view, setView] = useState<ChatView>("loading");
@@ -35,6 +62,16 @@ export function ChatPanel() {
   const [progress, setProgress] = useState<string | null>(null);
   const [indexError, setIndexError] = useState<string | null>(null);
 
+  const [messages, setMessages] = useState<ChatUiMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
+
   const indexNow = async () => {
     const ws = await getCurrentWorkspace();
     if (!ws) {
@@ -54,6 +91,60 @@ export function ChatPanel() {
       setProgress(null);
     } finally {
       setIndexing(false);
+    }
+  };
+
+  const send = async () => {
+    const question = input.trim();
+    if (!question || streaming) return;
+    setInput("");
+    setChatError(null);
+    const cfg = config ?? (await getProviderConfig());
+    if (!config) setConfig(cfg);
+    setMessages((prev) => [...prev, { role: "user", content: question }]);
+    setStreaming(true);
+    try {
+      let context: RetrievedChunk[] = [];
+      const ws = await getCurrentWorkspace();
+      if (ws) {
+        context = await retrieveContext(question, ws.id);
+      }
+      const history: ChatMessage[] = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+      const request: ChatMessage[] = [
+        { role: "system", content: buildSystemPrompt(context) },
+        ...history,
+        { role: "user", content: question },
+      ];
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      await streamChat(request, cfg, (delta) => {
+        setMessages((prev) => {
+          const next = [...prev];
+          const last = next[next.length - 1];
+          if (last && last.role === "assistant") {
+            next[next.length - 1] = { ...last, content: last.content + delta };
+          }
+          return next;
+        });
+      });
+      const sources = [...new Set(context.map((c) => c.path))];
+      setMessages((prev) => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last && last.role === "assistant") {
+          next[next.length - 1] = sources.length
+            ? { ...last, sources }
+            : { ...last };
+        }
+        return next;
+      });
+    } catch (err) {
+      console.error("[chat] send failed", err);
+      setChatError(String(err));
+    } finally {
+      setStreaming(false);
     }
   };
 
@@ -89,15 +180,45 @@ export function ChatPanel() {
         {progress && <span className="text-xs text-neutral-500">{progress}</span>}
         {indexError && <span className="truncate text-xs text-red-600">{indexError}</span>}
       </div>
-      <div className="flex-1 overflow-y-auto p-3 text-sm text-neutral-400">
-        Ask questions about your workspace…
+      <div className="flex-1 space-y-3 overflow-y-auto p-3 text-sm">
+        {messages.length === 0 && (
+          <div className="text-neutral-400">Ask questions about your workspace…</div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
+            <div
+              className={`inline-block max-w-full whitespace-pre-wrap rounded-lg px-2.5 py-1.5 ${
+                m.role === "user"
+                  ? "bg-neutral-900 text-white"
+                  : "bg-neutral-100 text-neutral-900"
+              }`}
+            >
+              {m.content || (streaming && i === messages.length - 1 ? "…" : "")}
+            </div>
+            {m.sources && m.sources.length > 0 && (
+              <div className="mt-1 text-xs text-neutral-500">
+                Sources: {m.sources.join(", ")}
+              </div>
+            )}
+          </div>
+        ))}
+        {chatError && <div className="text-xs text-red-600">{chatError}</div>}
+        <div ref={messagesEndRef} />
       </div>
       <div className="border-t border-neutral-200 p-2">
         <input
           type="text"
-          disabled
-          placeholder="Send messages in an upcoming step"
           className="w-full rounded-md border border-neutral-200 px-2 py-1.5 text-sm disabled:bg-neutral-100"
+          disabled={streaming}
+          value={input}
+          placeholder={streaming ? "Answering…" : "Ask about your workspace…"}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void send();
+            }
+          }}
         />
       </div>
     </div>

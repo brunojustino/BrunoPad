@@ -109,7 +109,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - runtime smoke (user-run): Index workspace -> embeddings rows
             exist for each .md (inspect brunopad.db); edit a file
             externally -> its rows refresh ~1s -->
-- [ ] 3. Retrieval + streaming chat answer with sources
+- [x] 3. Retrieval + streaming chat answer with sources
   Blocked by: 2
   <!-- mini-plan filled at execution time:
        Steps:
@@ -160,6 +160,11 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 
+- Task 3 (2026-10-02): no deviations. Chat context = system prompt
+  with source-prefixed blocks; sources deduped by path below the
+  answer. No-key openrouter retrieval returns [] -> graceful
+  "no indexed notes" system prompt. Verify: `npm run build` green,
+  `cargo check` green. Runtime smoke pending user run.
 - Task 2 (2026-10-02): deviation - the embeddings table lands as
   migration v3 (task 1 already shipped v2 for ai_settings). Watcher
   re-embed lives in App.tsx (debounced 1s over WatchEvent.paths);
