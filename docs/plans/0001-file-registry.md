@@ -51,13 +51,25 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        src-tauri/src/lib.rs (no schema change, table exists in migration 1)
        Verify: npm run tauri dev; open a workspace; check
        SELECT * FROM files matches disk (create, edit, delete, restore). -->
-- [ ] 2. Expose registry read API to the frontend
+- [x] 2. Expose registry read API to the frontend
   Blocked by: 1
-  <!-- Steps: lib/fileRegistry.ts with getFileId(workspaceId, path) and
-       listFiles(workspaceId); SQLite via plugin-sql, same pattern as
-       embeddingStore.ts.
-       Files/symbols: new src/lib/fileRegistry.ts, src/lib/db.ts
-       Verify: typecheck (npx tsc --noEmit) + manual dev-run query. -->
+  <!-- mini-plan (2026-10-02):
+       Steps:
+       1. Extend src/lib/fileRegistry.ts with two read helpers:
+          - listFiles(workspaceId): SELECT id, path FROM files WHERE
+            workspace_id = $1 -> { id, path }[]
+          - getFileId(workspaceId, path): SELECT id ... LIMIT 1 ->
+            number | null (null when unregistered; callers decide
+            whether to sync-and-retry later)
+       2. No UI wiring yet - task 3 (embeddings by files.id) is the
+          first consumer; media plan will follow.
+       Files/symbols: src/lib/fileRegistry.ts (same pattern as
+       embeddingStore.ts)
+       Verify: npx tsc --noEmit; npm run build; manual query on next
+       dev run (listFiles returns the same rows as
+       SELECT * FROM files WHERE workspace_id = <id>). -->
+  <!-- executed 2026-10-02: implemented as mini-planned; typecheck and
+       build green; manual query spot-check left to user on next dev run. -->
 - [ ] 3. Key AI embeddings by files.id instead of path string
   Blocked by: 2
   <!-- Steps: add file_id FK to embeddings (migration 4), populate during

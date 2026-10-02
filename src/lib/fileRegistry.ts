@@ -38,3 +38,28 @@ export async function syncFileRegistry(workspace: UserWorkspace): Promise<void> 
     );
   }
 }
+
+export interface RegistryFile {
+  id: number;
+  path: string;
+}
+
+export async function listFiles(workspaceId: number): Promise<RegistryFile[]> {
+  const db = await getDb();
+  return db.select<RegistryFile[]>(
+    "SELECT id, path FROM files WHERE workspace_id = $1 ORDER BY path",
+    [workspaceId],
+  );
+}
+
+export async function getFileId(
+  workspaceId: number,
+  path: string,
+): Promise<number | null> {
+  const db = await getDb();
+  const rows = await db.select<{ id: number }[]>(
+    "SELECT id FROM files WHERE workspace_id = $1 AND path = $2 LIMIT 1",
+    [workspaceId, path],
+  );
+  return rows[0]?.id ?? null;
+}
