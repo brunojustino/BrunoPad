@@ -10,3 +10,4 @@ One file per decision: `NNNN-slug.md`, sequential numbering. Template in `docs/t
 | [0004](0004-runtime-host-waiver-brunopad.md) | Waiver: brunopad runs on the host | accepted | 2026-10-01 |
 | [0005](0005-agent-e2e-webdriverio.md) | Agent E2E testing: WebdriverIO + @wdio/tauri-service, not Playwright | reversed | 2026-10-01 |
 | [0006](0006-dockview-panes.md) | Pane management: dockview, not react-mosaic | accepted | 2026-10-02 |
+| [0007](0007-media-embeds-and-assets-folder.md) | Media embeds: HTML-in-markdown custom blocks, assets/ convention, workspace-scoped serving | accepted | 2026-10-02 |

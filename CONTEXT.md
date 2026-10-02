@@ -33,3 +33,15 @@ _Avoid_: "grid state", "window layout".
 **Workspace root**:
 The directory opencode was started in; the boundary agents may not read, write, or search beyond without explicit user permission.
 _Avoid_: "project directory", "user directory" (ambiguous between repo and home).
+
+**Media embed**:
+An image, PDF, or doc/docx file embedded in a document and serialized as HTML-in-markdown with file-relative references; resized via drag handles with dimensions in HTML attributes.
+_Avoid_: "attachment" (reserved for plain files attached as chips without this round-trip contract), "inline media".
+
+**Assets folder**:
+The conventional folder `assets` used to store copied media: found both next to the active md file (`{file dir}/assets`) and at the User workspace root (`{workspace}/assets`).
+_Avoid_: "media folder" (rejected), "attachments folder".
+
+**File registry**:
+The database mirror of the User workspace's files, maintained as a sync cache of the filesystem; md and media files both get a stable file id.
+_Avoid_: "file index" (collides with AI indexing), "file catalog".
