@@ -199,9 +199,44 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        settings keys following src/lib/ai/settings.ts pattern
        Verify: dev run; each destination lands the file correctly; the
        last-used destination is remembered across restart. -->
-- [ ] 5. Paste-screenshot via ctrl+v
+- [x] 5. Paste-screenshot via ctrl+v
   Blocked by: 2
-  <!-- Steps: intercept paste in editor; if clipboard has image data, save
+  <!-- mini-plan (2026-10-02):
+       Facts: pasteHandler option is invoked synchronously by
+       handleDOMEvents.paste (pasteExtension.ts:129-150) which already
+       calls event.preventDefault(); returning true claims the paste, so
+       async work runs as a floating promise.
+       Steps:
+       1. mediaInsert.ts:
+          - export uniqueTarget (was private; reused for timestamp guard)
+          - saveClipboardImage(mdFilePath, bytes) -> { absolutePath,
+            relativeUrl }: resolveTargetDir(mdFilePath, "workspace") (has
+            the loose-file fallback built in), name = screenshot-
+            YYYYMMDD-HHMMSS.png (uniqueTarget suffix if the same second
+            collides), writeFile(target, bytes), register via
+            ensureFileId when inside workspace.
+          - insertEmbedAtCursor(editor, kind, url, name): the task 4
+            insert-point rule (empty paragraph -> replaceBlocks, else
+            insertBlocks after); MediaInsertDialog switches to this helper
+            (dedupe, tiny refactor).
+       2. MarkdownEditor.tsx: pasteHandler in useCreateBlockNote options:
+          scan clipboardData items for kind "file" + type image/*; found
+          -> blob.arrayBuffer() -> saveClipboardImage -> insertEmbedAt-
+          Cursor(mediaImage) as floating promise -> return true; nothing
+          found -> context.defaultPasteHandler() passthrough.
+          Uses context.editor (options object self-references).
+       Files/symbols: src/lib/editor/mediaInsert.ts,
+       src/components/MediaInsertDialog.tsx, src/components/MarkdownEditor.tsx
+       Verify: npx tsc --noEmit; npm run build; manual dev run: screenshot
+       -> ctrl+v in a workspace doc -> file lands in {workspace}/assets,
+       image block inserted, no dialog; in a loose doc -> {file dir}/assets. -->
+  <!-- executed 2026-10-02: implemented as mini-planned (uniqueTarget
+       exported, saveClipboardImage + insertEmbedAtCursor in mediaInsert,
+       dialog deduped onto the helper, pasteHandler in MarkdownEditor
+       returning true to claim image pastes). Deviation: none in scope.
+       Typecheck and build green; manual paste checks pending user dev run. -->
+  <!-- original scope note (superseded by mini-plan above):
+       Steps: intercept paste in editor; if clipboard has image data, save
        PNG to {workspace}/assets/ as screenshot-YYYYMMDD-HHMMSS.png, insert
        image block; no destination dialog. Loose md files (outside the
        workspace): fallback to assets next to the file.

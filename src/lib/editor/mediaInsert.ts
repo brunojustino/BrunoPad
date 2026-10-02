@@ -1,7 +1,8 @@
-import { copyFile, mkdir, readDir } from "@tauri-apps/plugin-fs";
+import { copyFile, mkdir, readDir, writeFile } from "@tauri-apps/plugin-fs";
 import { ensureFileId } from "../fileRegistry";
 import { getCurrentWorkspace } from "../workspace";
 import { joinPath, parentPath } from "../explorer";
+import type { BlockNoteEditor } from "@blocknote/core";
 
 export type MediaDestination = "sameFolder" | "subfolder" | "workspace";
 
@@ -25,7 +26,7 @@ export function relativePath(from: string, to: string): string {
   return [...Array(ups).fill(".."), ...rest].join(sep);
 }
 
-async function uniqueTarget(dir: string, name: string): Promise<string> {
+export async function uniqueTarget(dir: string, name: string): Promise<string> {
   let target = joinPath(dir, name);
   const dot = name.lastIndexOf(".");
   const stem = dot > 0 ? name.slice(0, dot) : name;
@@ -98,4 +99,49 @@ export async function copyIntoWorkspaceDestination(
     }
   }
   return { absolutePath: target, relativeUrl: relativePath(parentPath(mdFilePath), target) };
+}
+
+function timestampName(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `screenshot-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+}
+
+export async function saveClipboardImage(
+  mdFilePath: string,
+  bytes: Uint8Array,
+): Promise<CopiedMedia> {
+  const dir = await resolveTargetDir(mdFilePath, "workspace");
+  const target = await uniqueTarget(dir, timestampName());
+  await writeFile(target, bytes);
+  const workspace = await getCurrentWorkspace();
+  if (workspace && (await isInsideWorkspace(target))) {
+    try {
+      await ensureFileId(workspace.id, target);
+    } catch (err) {
+      console.error("[media] register failed", target, err);
+    }
+  }
+  return { absolutePath: target, relativeUrl: relativePath(parentPath(mdFilePath), target) };
+}
+
+export type MediaEmbedKind = "mediaImage" | "mediaPdf" | "mediaDoc";
+
+export async function insertEmbedAtCursor(
+  editor: BlockNoteEditor<any, any, any>,
+  kind: MediaEmbedKind,
+  url: string,
+  name: string,
+): Promise<void> {
+  const embedBlock = { type: kind, props: { url, name } } as never;
+  const cursorBlock = editor.getTextCursorPosition().block;
+  const isEmpty =
+    cursorBlock.type === "paragraph" &&
+    Array.isArray(cursorBlock.content) &&
+    cursorBlock.content.length === 0;
+  if (isEmpty) {
+    await editor.replaceBlocks([cursorBlock], [embedBlock] as never);
+  } else {
+    await editor.insertBlocks([embedBlock], cursorBlock, "after" as never);
+  }
 }

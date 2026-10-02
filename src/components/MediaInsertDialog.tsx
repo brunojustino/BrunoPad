@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   copyIntoWorkspaceDestination,
+  insertEmbedAtCursor,
   type MediaDestination,
 } from "../lib/editor/mediaInsert";
 import { mediaKindFor } from "../lib/editor/embedBlocks";
@@ -23,11 +24,6 @@ interface MediaInsertDialogProps {
   onClose: () => void;
 }
 
-function isEmptyParagraph(block: { type: string; content: unknown }): boolean {
-  if (block.type !== "paragraph") return false;
-  return Array.isArray(block.content) && block.content.length === 0;
-}
-
 export function MediaInsertDialog({ sourcePath, mdFilePath, editor, onClose }: MediaInsertDialogProps) {
   const [destination, setDestination] = useState<MediaDestination>("subfolder");
   const [busy, setBusy] = useState(false);
@@ -43,13 +39,7 @@ export function MediaInsertDialog({ sourcePath, mdFilePath, editor, onClose }: M
       await setMediaInsertDestination(destination);
       const kind = mediaKindFor(sourcePath);
       const name = sourcePath.replace(/[\\/]+/g, "/").split("/").pop() ?? "";
-      const embedBlock = { type: kind, props: { url: relativeUrl, name } } as never;
-      const cursorBlock = editor.getTextCursorPosition().block;
-      if (isEmptyParagraph(cursorBlock)) {
-        await editor.replaceBlocks([cursorBlock], [embedBlock] as never);
-      } else {
-        await editor.insertBlocks([embedBlock], cursorBlock, "after" as never);
-      }
+      await insertEmbedAtCursor(editor, kind, relativeUrl, name);
       onClose();
     } catch (err) {
       console.error("[media] insert failed", err);

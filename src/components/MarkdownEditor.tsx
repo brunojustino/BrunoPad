@@ -13,6 +13,7 @@ import { useFileContent } from "../lib/useFileContent";
 import { useGhostText } from "../lib/ai/ghost";
 import { countWords } from "../lib/wordCount";
 import { schemaWithEmbeds, EmbedMdPathContext } from "../lib/editor/embedBlocks";
+import { saveClipboardImage, insertEmbedAtCursor } from "../lib/editor/mediaInsert";
 import { MediaInsertDialog } from "./MediaInsertDialog";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -34,7 +35,32 @@ interface MarkdownEditorProps {
 }
 
 export function MarkdownEditor({ filePath, onWordCount }: MarkdownEditorProps) {
-  const editor = useCreateBlockNote({ schema: schemaWithEmbeds }) as unknown as BlockNoteEditor;
+  const editor = useCreateBlockNote({
+    schema: schemaWithEmbeds,
+    pasteHandler: (context) => {
+      const items = context.event.clipboardData?.items;
+      if (!items) return undefined;
+      for (const item of Array.from(items)) {
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          const blob = item.getAsFile();
+          if (!blob) continue;
+          const mdPath = filePath;
+          void (async () => {
+            try {
+              const bytes = new Uint8Array(await blob.arrayBuffer());
+              const { relativeUrl } = await saveClipboardImage(mdPath, bytes);
+              const name = relativeUrl.split(/[\\/]/).pop() ?? "screenshot";
+              await insertEmbedAtCursor(context.editor, "mediaImage", relativeUrl, name);
+            } catch (err) {
+              console.error("[media] paste image failed", err);
+            }
+          })();
+          return true;
+        }
+      }
+      return undefined;
+    },
+  }) as unknown as BlockNoteEditor;
   const { loaded, error } = useFileContent(editor, filePath);
   const [insertSource, setInsertSource] = useState<string | null>(null);
 
