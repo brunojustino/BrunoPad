@@ -10,9 +10,48 @@ Spec: -
 
 Ordered; "Blocked by" lists task numbers that must finish first.
 
-- [ ] 1. Serving pipeline for workspace files: custom Rust protocol handler
+- [x] 1. Serving pipeline for workspace files: custom Rust protocol handler
   Blocked by: -
-  <!-- mini-plan filled at execution time:
+  <!-- mini-plan (2026-10-02):
+       Steps:
+       1. src-tauri/src/lib.rs:
+          - Managed state Mutex<Option<PathBuf>> holding the canonical
+            media root (the current User workspace).
+          - Command set_media_root(path): std::fs::canonicalize both sides
+            consistently, store in state.
+          - register_uri_scheme_protocol("media", ...): parse the request
+            URI path (WebView2 serves custom protocols as
+            http://media.localhost/<path>), percent-decode it (small
+            hand-rolled decoder, no new crate), canonicalize, reject
+            unless it starts_with the registered root (blocks .. escape),
+            stream the file with a content-type guessed from the
+            extension (png/jpg/gif/webp/svg/bmp/ico/pdf/txt/mp4/mp3/wav/ogg,
+            default application/octet-stream), CORS header *, 404/403
+            on failure.
+          - No tauri.conf.json change: csp is null and assetProtocol stays
+            untouched (ADR 0007).
+       2. src/lib/mediaProtocol.ts: setMediaRoot(path) -> invoke("set_media_root"),
+          mediaUrl(filePath) -> convertFileSrc(filePath, "media").
+       3. App.tsx: effect on workspace -> void setMediaRoot(workspace.path)
+          (both attach paths: initial load and pickWorkspace flow through
+          the workspace state).
+       4. PDF spike (manual): open devtools in a dev run, render
+          <iframe src={mediaUrl(some.pdf)}> in a test doc; record result
+          in this plan's Notes - iframe works (task 2 keeps markup) or
+          pdf.js fallback required.
+       Files/symbols: src-tauri/src/lib.rs, new src/lib/mediaProtocol.ts,
+       src/App.tsx
+       Verify: cargo check (src-tauri), npx tsc --noEmit, npm run build;
+       manual dev run: fetch(mediaUrl(<workspace image>)) returns 200 with
+       image content-type;        mediaUrl(<path outside workspace>) returns 403;
+       PDF spike outcome recorded. -->
+  <!-- executed 2026-10-02: implemented as mini-planned (MediaRoot state +
+       set_media_root command + media:// protocol handler in lib.rs,
+       mediaProtocol.ts, App.tsx effect). Deviation: none in scope; cargo
+       check, typecheck, build green. Manual parts pending user dev run:
+       200/403 fetch checks and the PDF iframe spike - outcome to be
+       recorded in Notes. -->
+  <!-- original scope note (superseded by mini-plan above):
        Steps: register custom protocol handler in src-tauri/src/lib.rs;
        serve only paths under the current User workspace root. Include a
        spike: does WebView2 render PDFs in an iframe? (yes -> iframe;
