@@ -3,6 +3,7 @@ import { useCreateBlockNote, useEditorChange } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { markSelfWrite } from "../lib/watcher";
+import { useGhostText } from "../lib/ai/ghost";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
@@ -55,11 +56,33 @@ export function MarkdownEditor({ filePath }: MarkdownEditorProps) {
     }, SAVE_DEBOUNCE_MS);
   }, editor);
 
+  const ghost = useGhostText(editor);
+  const ghostWrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = ghostWrapRef.current;
+    if (!el) return;
+    el.addEventListener("keydown", ghost.handleKeydown, true);
+    return () => el.removeEventListener("keydown", ghost.handleKeydown, true);
+  }, [ghost.handleKeydown]);
+
   if (error) {
     return <div className="p-4 text-sm text-red-600">Failed to load: {error}</div>;
   }
   if (!loaded) {
     return <div className="p-4 text-sm text-neutral-400">Loading…</div>;
   }
-  return <BlockNoteView editor={editor} className="h-full" />;
+  return (
+    <div ref={ghostWrapRef} className="relative h-full">
+      <BlockNoteView editor={editor} className="h-full" />
+      {ghost.suggestion && (
+        <span
+          className="pointer-events-none absolute select-none text-neutral-400"
+          style={{ left: ghost.suggestion.left, top: ghost.suggestion.top }}
+        >
+          {ghost.suggestion.text}
+        </span>
+      )}
+    </div>
+  );
 }

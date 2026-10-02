@@ -1,7 +1,7 @@
 <!-- owt:start -->
 # Plan: brunopad AI integration
 
-Status: approved
+Status: done
 Runtime: host-waived
 <!-- When the last task is ticked, set Status: done and move this file to
      docs/plans/history/ in the same commit (archived plans are read-only records). -->
@@ -134,7 +134,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - runtime smoke (user-run): ask about workspace content ->
             answer streams in and cites real files; empty workspace
             index -> graceful "no context" behavior -->
-- [ ] 4. Ghost-text autocomplete on typing pause
+- [x] 4. Ghost-text autocomplete on typing pause
   Blocked by: 3
   <!-- mini-plan filled at execution time:
        Steps:
@@ -160,6 +160,15 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology (also mirrored to CONTEXT.md), ADRs produced.
 
+- Task 4 (2026-10-02): deviation - no separate small/fast ghost model
+  setting; ghost text uses the configured chat model (max_tokens 48,
+  single-line reply). Overlay = positioned span inside a relative
+  wrapper around BlockNoteView; Tab/Escape handled via a native
+  capture-phase keydown listener on the wrapper. First doc change
+  (initial file load) and the change caused by accepting a suggestion
+  are suppressed from scheduling new requests. Cursor must not sit
+  mid-word for a suggestion to fire. Verify: `npm run build` green,
+  `cargo check` green. Runtime smoke pending user run.
 - Task 3 (2026-10-02): no deviations. Chat context = system prompt
   with source-prefixed blocks; sources deduped by path below the
   answer. No-key openrouter retrieval returns [] -> graceful
