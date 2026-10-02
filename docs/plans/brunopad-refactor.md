@@ -42,7 +42,7 @@ Ordered; "Blocked by" lists task numbers that must finish first.
        - runtime smoke (user-run): Index workspace + ask question
             still streams with sources -->
 
-- [ ] 2. Secret source seam (Open/Closed prep for keychain)
+- [x] 2. Secret source seam (Open/Closed prep for keychain)
   Blocked by: -
   <!-- mini-plan filled at execution time:
        Steps:
@@ -127,6 +127,11 @@ Ordered; "Blocked by" lists task numbers that must finish first.
 
 Deviations, settled terminology, ADRs produced.
 
+- Task 2 (2026-10-02): no deviations. envSecretSource still maps
+  openrouter -> import.meta.env.OPENROUTER_API_KEY internally; presets
+  carry their SecretSource; getApiKey is a one-line preset dispatch.
+  Verify: `npm run build` green, `cargo check` green. Runtime smoke
+  pending user run.
 - Task 1 (2026-10-02): no deviations. Error labels preserved at each
   call site via aiPostJson's errorLabel param ("embeddings request",
   "chat request", "ghost request"). Verify: `npm run build` green,

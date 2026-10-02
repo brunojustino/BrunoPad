@@ -1,4 +1,5 @@
 import { getDb } from "../db";
+import { envSecretSource, noSecretSource, type SecretSource } from "./secretSource";
 
 export type AiProviderId = "openrouter" | "ollama" | "lmstudio";
 
@@ -9,6 +10,7 @@ export interface AiProviderPreset {
   chatModel: string;
   embeddingModel: string;
   requiresApiKey: boolean;
+  secretSource: SecretSource;
 }
 
 export const AI_PROVIDER_PRESETS: AiProviderPreset[] = [
@@ -19,6 +21,7 @@ export const AI_PROVIDER_PRESETS: AiProviderPreset[] = [
     chatModel: "stealth/space-bunny-alpha",
     embeddingModel: "openai/text-embedding-3-small",
     requiresApiKey: true,
+    secretSource: envSecretSource,
   },
   {
     id: "ollama",
@@ -27,6 +30,7 @@ export const AI_PROVIDER_PRESETS: AiProviderPreset[] = [
     chatModel: "",
     embeddingModel: "nomic-embed-text",
     requiresApiKey: false,
+    secretSource: noSecretSource,
   },
   {
     id: "lmstudio",
@@ -35,6 +39,7 @@ export const AI_PROVIDER_PRESETS: AiProviderPreset[] = [
     chatModel: "",
     embeddingModel: "",
     requiresApiKey: false,
+    secretSource: noSecretSource,
   },
 ];
 
@@ -96,6 +101,5 @@ export async function setProviderConfig(config: AiProviderConfig): Promise<void>
 }
 
 export function getApiKey(provider: AiProviderId): string {
-  if (provider !== "openrouter") return "";
-  return import.meta.env.OPENROUTER_API_KEY ?? "";
+  return PRESETS[provider].secretSource.get(provider);
 }
