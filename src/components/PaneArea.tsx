@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 import {
   DockviewReact,
   DockviewReadyEvent,
@@ -11,6 +11,10 @@ import "dockview-react/dist/styles/dockview.css";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ChatPanel } from "./chat/ChatPanel";
 import { FILE_MIME, nameFromPath } from "../lib/panels";
+
+export type WordCountReporter = (filePath: string, count: number) => void;
+
+const WordCountContext = createContext<WordCountReporter>(() => {});
 
 function dropDirection(position: string): "left" | "right" | "above" | "below" | "within" {
   switch (position) {
@@ -29,9 +33,14 @@ function dropDirection(position: string): "left" | "right" | "above" | "below" |
 
 function MarkdownPane(props: IDockviewPanelProps) {
   const filePath = props.params.filePath as string;
+  const reportWordCount = useContext(WordCountContext);
   return (
     <div className="h-full overflow-y-auto">
-      <MarkdownEditor key={filePath} filePath={filePath} />
+      <MarkdownEditor
+        key={filePath}
+        filePath={filePath}
+        onWordCount={(count) => reportWordCount(filePath, count)}
+      />
     </div>
   );
 }
@@ -46,6 +55,7 @@ interface PaneAreaProps {
   initialLayout: SerializedDockview | null;
   onLayoutChange: (layout: SerializedDockview) => void;
   onApiReady: (api: DockviewApi) => void;
+  onWordCount: WordCountReporter;
 }
 
 export function PaneArea(props: PaneAreaProps) {
@@ -89,11 +99,13 @@ export function PaneArea(props: PaneAreaProps) {
   };
 
   return (
-    <DockviewReact
-      className="dockview-theme-light h-full"
-      components={components}
-      onReady={onReady}
-      onDidDrop={onDidDrop}
-    />
+    <WordCountContext.Provider value={props.onWordCount}>
+      <DockviewReact
+        className="dockview-theme-dark h-full"
+        components={components}
+        onReady={onReady}
+        onDidDrop={onDidDrop}
+      />
+    </WordCountContext.Provider>
   );
 }

@@ -1,1 +1,67 @@
 @import "tailwindcss";
+
+@theme {
+  /* ink & fog — cool dark base, restrained brass accent */
+  --color-ink-950: #14161b;
+  --color-ink-900: #191c22;
+  --color-ink-850: #1c2028;
+  --color-ink-800: #20242c;
+  --color-ink-700: #2a2f39;
+  --color-line: #333947;
+  --color-line-soft: #282d36;
+
+  --color-fog-50: #f2f3f7;
+  --color-fog-100: #e9ebf1;
+  --color-fog-300: #b3bac6;
+  --color-fog-500: #8b93a1;
+  --color-fog-600: #6f7784;
+
+  --color-brass-300: #e5c08d;
+  --color-brass-400: #d9a86c;
+  --color-brass-500: #b98a4e;
+
+  --color-berry-400: #e2798a;
+}
+
+/* BlockNote: let the editor surface stretch to the full pane height */
+.bn-container {
+  min-height: 100%;
+}
+
+.bn-container > .bn-editor {
+  min-height: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-ink-950);
+  color: var(--color-fog-100);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: color-mix(in oklab, var(--color-brass-400) 35%, transparent);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-ink-700);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-line);
+  background-clip: content-box;
+}

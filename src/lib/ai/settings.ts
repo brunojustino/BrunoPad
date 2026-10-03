@@ -103,3 +103,15 @@ export async function setProviderConfig(config: AiProviderConfig): Promise<void>
 export function getApiKey(provider: AiProviderId): string {
   return PRESETS[provider].secretSource.get(provider);
 }
+
+export function hasApiKey(provider: AiProviderId): boolean {
+  return Boolean(PRESETS[provider].secretSource.get(provider));
+}
+
+export async function hasSavedAiConfig(): Promise<boolean> {
+  const db = await getDb();
+  const rows = await db.select<AiSettingRow[]>(
+    "SELECT key, value FROM ai_settings WHERE key = 'provider'",
+  );
+  return rows.length > 0;
+}

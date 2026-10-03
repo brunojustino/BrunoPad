@@ -79,7 +79,7 @@ export function FileTree({ rootPath, onSelectFile }: FileTreeProps) {
 
   if (!data.entries) {
     void data.refreshChildren(rootPath);
-    return <div className="p-2 text-sm text-neutral-400">Loading…</div>;
+    return <div className="p-2 text-sm text-fog-500">Loading…</div>;
   }
 
   return (

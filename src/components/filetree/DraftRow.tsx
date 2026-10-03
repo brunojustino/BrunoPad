@@ -28,7 +28,7 @@ export function DraftRow({ depth, defaultValue, onCommit }: DraftRowProps) {
   return (
     <input
       ref={inputRef}
-      className="mx-1 my-0.5 rounded border border-blue-400 px-1.5 py-0.5 text-sm outline-none"
+      className="mx-1 my-0.5 rounded border border-brass-400 bg-ink-800 px-1.5 py-0.5 text-sm text-fog-100 outline-none placeholder:text-fog-600"
       style={{ marginLeft: `${depth * 12 + 6}px`, width: "calc(100% - 18px)" }}
       value={value}
       onChange={(e) => setValue(e.target.value)}
