@@ -6,6 +6,7 @@ import { createReactBlockSpec } from "@blocknote/react";
 import { createContext, useContext } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { joinPath, parentPath } from "../explorer";
+import { mediaUrl } from "../mediaProtocol";
 
 const PDF_EXTS = new Set(["pdf"]);
 const DOC_EXTS = new Set(["doc", "docx", "odt", "xls", "xlsx", "ods", "ppt", "pptx", "odp", "rtf"]);
@@ -24,6 +25,18 @@ export function mediaKindFor(url: string): "mediaImage" | "mediaPdf" | "mediaDoc
 }
 
 export const EmbedMdPathContext = createContext<string | null>(null);
+
+export function embedSrc(url: string, mdPath: string | null): string | undefined {
+  if (!url) return undefined;
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  const absolute =
+    /^[A-Za-z]:[\\/]/.test(url) || url.startsWith("/")
+      ? url
+      : mdPath
+        ? joinPath(parentPath(mdPath), url)
+        : null;
+  return absolute ? mediaUrl(absolute) : undefined;
+}
 
 interface EmbedProps {
   url: string;
@@ -72,8 +85,12 @@ const createMediaImage = createReactBlockSpec(
   },
   {
     runsBefore: ["image"],
+    meta: {
+      fileBlockAccept: [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico"],
+    },
     toExternalHTML: ({ block }) => {
       const p = block.props as unknown as ResizableProps;
+      if (!p.url) return undefined;
       const w = Number(p.width) || undefined;
       return <img src={p.url} alt={p.name} width={w} />;
     },
@@ -92,11 +109,20 @@ const createMediaImage = createReactBlockSpec(
     },
     render: ({ block, editor }) => {
       const p = block.props as unknown as ResizableProps;
+      const mdPath = useContext(EmbedMdPathContext);
+      const src = embedSrc(p.url, mdPath) ?? p.url;
+      if (!p.url) {
+        return (
+          <div className="my-1 inline-flex items-center gap-2 rounded border border-line px-2 py-1 text-xs text-fog-500">
+            {p.name || "Loading media…"}
+          </div>
+        );
+      }
       const startW = Number(p.width) || 0;
       return (
         <div className="relative my-1 inline-block max-w-full">
           <img
-            src={p.url}
+            src={src}
             alt={p.name}
             draggable={false}
             style={startW > 0 ? { width: `${startW}px` } : undefined}
@@ -133,8 +159,12 @@ const createMediaPdf = createReactBlockSpec(
   },
   {
     runsBefore: ["image"],
+    meta: {
+      fileBlockAccept: [".pdf"],
+    },
     toExternalHTML: ({ block }) => {
       const p = block.props as unknown as ResizableProps;
+      if (!p.url) return undefined;
       return <img src={p.url} alt={p.name} />;
     },
     parse: (element) => {
@@ -145,13 +175,15 @@ const createMediaPdf = createReactBlockSpec(
     },
     render: ({ block, editor }) => {
       const p = block.props as unknown as PdfProps;
+      const mdPath = useContext(EmbedMdPathContext);
+      const src = embedSrc(p.url, mdPath) ?? p.url;
       const w = Number(p.width) || 640;
       const h = Number(p.height) || 480;
       return (
         <div className="relative my-2">
           {p.url ? (
             <iframe
-              src={p.url}
+              src={src}
               title={p.name}
               style={{ width: `${w}px`, height: `${h}px` }}
               className="rounded border border-line bg-ink-950"
@@ -230,6 +262,9 @@ const createMediaDoc = createReactBlockSpec(
   },
   {
     runsBefore: ["paragraph"],
+    meta: {
+      fileBlockAccept: [".doc", ".docx", ".odt", ".xls", ".xlsx", ".ods", ".ppt", ".pptx", ".odp", ".rtf"],
+    },
     toExternalHTML: ({ block }) => {
       const p = block.props as unknown as EmbedProps;
       return <a href={p.url}>{p.name}</a>;

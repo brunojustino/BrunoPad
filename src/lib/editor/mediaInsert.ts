@@ -20,8 +20,8 @@ export function relativePath(from: string, to: string): string {
   const a = segments(from);
   const b = segments(to);
   let i = 0;
-  while (i < a.length - 1 && i < b.length - 1 && a[i].toLowerCase() === b[i].toLowerCase()) i++;
-  const ups = a.length - 1 - i;
+  while (i < a.length && i < b.length - 1 && a[i].toLowerCase() === b[i].toLowerCase()) i++;
+  const ups = a.length - i;
   const rest = b.slice(i);
   return [...Array(ups).fill(".."), ...rest].join(sep);
 }
@@ -107,12 +107,14 @@ function timestampName(): string {
   return `screenshot-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
 }
 
-export async function saveClipboardImage(
+export async function saveMediaFile(
   mdFilePath: string,
   bytes: Uint8Array,
+  name?: string,
 ): Promise<CopiedMedia> {
   const dir = await resolveTargetDir(mdFilePath, "workspace");
-  const target = await uniqueTarget(dir, timestampName());
+  const base = name?.replace(/[\\/]+/g, "/").split("/").pop();
+  const target = await uniqueTarget(dir, base || timestampName());
   await writeFile(target, bytes);
   const workspace = await getCurrentWorkspace();
   if (workspace && (await isInsideWorkspace(target))) {
